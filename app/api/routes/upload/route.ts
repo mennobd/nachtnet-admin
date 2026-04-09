@@ -50,14 +50,14 @@ export async function POST(request: Request) {
 
     // RouteFile opslaan
     const routeFile = await prisma.routeFile.create({
-      data: {
-        routeId,
-        fileName,
-        filePath: `/routes/${fileName}`,
-        checksum,
-        version,
-      },
-    });
+    data: {
+      routeId,
+      fileName,
+      storageKey,
+      checksum,
+      version,
+    },
+  });
 
     // ManifestEntry maken
     await prisma.manifestEntry.create({
