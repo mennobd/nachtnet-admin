@@ -50,7 +50,7 @@ model RouteFile {
   route       Route    @relation(fields: [routeId], references: [id])
 
   fileName    String
-  filePath    String
+  storageKey  String
   checksum    String
   version     String
 
