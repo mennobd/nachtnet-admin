@@ -36,6 +36,42 @@ model Route {
   depot       String
   status      RouteStatus @default(DRAFT)
   notes       String?
+
+  files            RouteFile[]
+  manifestEntries  ManifestEntry[]
+
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+}
+
+model RouteFile {
+  id          String   @id @default(cuid())
+  routeId     String
+  route       Route    @relation(fields: [routeId], references: [id])
+
+  fileName    String
+  filePath    String
+  checksum    String
+  version     String
+
+  manifestEntries ManifestEntry[]
+
+  createdAt   DateTime @default(now())
+}
+
+model ManifestEntry {
+  id          String   @id @default(cuid())
+
+  routeId     String
+  route       Route    @relation(fields: [routeId], references: [id])
+
+  fileId      String
+  file        RouteFile @relation(fields: [fileId], references: [id])
+
+  packageName String
+  type        String
+  version     String
+  active      Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
 }
