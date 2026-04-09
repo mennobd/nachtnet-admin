@@ -45,6 +45,64 @@ export async function POST(request: Request) {
 
     const fileName = file.name;
     const version = `1.0.${checksum.slice(0, 8)}`;
+    const storageKey = `routes/${routeId}/${Date.now()}-${fileName}`;
+
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: process.env.BUCKET_NAME!,
+        Key: storageKey,
+        Body: buffer,
+        ContentType: "application/gpx+xml",
+      })
+    );
+
+    const routeFile = await prisma.routeFile.create({
+      data: {
+        routeId,
+        fileName,
+        storageKey,
+        checksum,
+        version,
+      },
+    });
+
+    await prisma.manifestEntry.create({
+      data: {
+        routeId,
+        fileId: routeFile.id,
+        packageName: "RET_NACHTNET",
+        type: "Regulier",
+        version,
+        active: true,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      fileName,
+      checksum,
+      version,
+      storageKey,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return NextResponse.json(
+      { error: "Upload mislukt" },
+      { status: 500 }
+    );
+  }
+}    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    const checksum = crypto
+      .createHash("sha256")
+      .update(buffer)
+      .digest("hex");
+
+    const fileName = file.name;
+    const version = `1.0.${checksum.slice(0, 8)}`;
 
     const storageKey = `routes/${routeId}/${Date.now()}-${fileName}`;
 
