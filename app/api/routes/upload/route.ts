@@ -1,15 +1,22 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import crypto from "crypto";
-import { writeFile } from "fs/promises";
-import path from "path";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+
+const s3 = new S3Client({
+  region: process.env.BUCKET_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  },
+});
 
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
 
-    const file = formData.get("file") as File;
-    const routeId = formData.get("routeId") as string;
+    const file = formData.get("file") as File | null;
+    const routeId = String(formData.get("routeId") ?? "");
 
     if (!file || !routeId) {
       return NextResponse.json(
@@ -18,22 +25,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // checksum (SHA256)
-    const checksum = crypto
-      .createHash("sha256")
-      .update(buffer)
-      .digest("hex");
-
-    // bestand opslaan
-    const fileName = file.name;
-    const filePath = path.join(process.cwd(), "public", "routes", fileName);
-
-    await writeFile(filePath, buffer);
-
-    // route ophalen
     const route = await prisma.route.findUnique({
       where: { id: routeId },
     });
@@ -45,21 +36,37 @@ export async function POST(request: Request) {
       );
     }
 
-    // versie genereren (simpel)
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    const checksum = crypto
+      .createHash("sha256")
+      .update(buffer)
+      .digest("hex");
+
+    const fileName = file.name;
     const version = `1.0.${checksum.slice(0, 8)}`;
 
-    // RouteFile opslaan
-    const routeFile = await prisma.routeFile.create({
-    data: {
-      routeId,
-      fileName,
-      storageKey,
-      checksum,
-      version,
-    },
-  });
+    const storageKey = `routes/${routeId}/${Date.now()}-${fileName}`;
 
-    // ManifestEntry maken
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: process.env.BUCKET_NAME!,
+        Key: storageKey,
+        Body: buffer,
+        ContentType: "application/gpx+xml",
+      })
+    );
+
+    const routeFile = await prisma.routeFile.create({
+      data: {
+        routeId,
+        fileName,
+        storageKey,
+        checksum,
+        version,
+      },
+    });
+
     await prisma.manifestEntry.create({
       data: {
         routeId,
@@ -76,6 +83,7 @@ export async function POST(request: Request) {
       fileName,
       checksum,
       version,
+      storageKey,
     });
   } catch (error) {
     console.error(error);
