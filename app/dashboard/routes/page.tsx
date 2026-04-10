@@ -1,6 +1,11 @@
 import Link from "next/link";
+import { prisma } from "@/lib/db";
 
-export default function RoutesPage() {
+export default async function RoutesPage() {
+  const routes = await prisma.route.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+
   return (
     <div className="space-y-6">
       <section className="rounded-2xl bg-white p-8 shadow-sm">
@@ -22,7 +27,7 @@ export default function RoutesPage() {
       </section>
 
       <section className="rounded-2xl bg-white p-8 shadow-sm">
-        <p className="text-slate-600">Routes overzicht werkt.</p>
+        <p className="text-slate-600">Aantal routes: {routes.length}</p>
       </section>
     </div>
   );
