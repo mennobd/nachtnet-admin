@@ -92,7 +92,7 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}    }
+}
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
