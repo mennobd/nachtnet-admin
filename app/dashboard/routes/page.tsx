@@ -3,8 +3,14 @@ import { prisma } from "@/lib/db";
 
 export default async function RoutesPage() {
   const routes = await prisma.route.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  orderBy: { createdAt: "desc" },
+  include: {
+    files: {
+      orderBy: { createdAt: "desc" },
+      take: 1,
+    },
+  },
+});
 
   return (
     <div className="space-y-6">
