@@ -43,6 +43,11 @@ export default async function RoutesPage() {
                   <p className="text-sm text-slate-500">
                     {route.routeCode}
                   </p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    {route.files.length > 0
+                      ? `Laatste versie: ${route.files[0].version}`
+                      : "Nog geen bestand geüpload"}
+                  </p>
                 </div>
 
                 <Link
