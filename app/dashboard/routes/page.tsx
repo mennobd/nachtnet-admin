@@ -38,10 +38,10 @@ export default async function RoutesPage() {
               >
                 <div>
                   <p className="font-medium text-slate-900">
-                    {route.name}
+                    {route.title}
                   </p>
                   <p className="text-sm text-slate-500">
-                    {route.routeId}
+                    {route.routeCode}
                   </p>
                 </div>
 
