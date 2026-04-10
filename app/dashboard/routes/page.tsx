@@ -4,10 +4,8 @@ import { prisma } from "@/lib/db";
 export default async function RoutesPage() {
   const routes = await prisma.route.findMany({
     orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      title: true,
-      routeCode: true,
+    include: {
+      files: true,
     },
   });
 
@@ -44,6 +42,11 @@ export default async function RoutesPage() {
                 <div>
                   <p className="font-medium text-slate-900">{route.title}</p>
                   <p className="text-sm text-slate-500">{route.routeCode}</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    {route.files.length > 0
+                      ? `${route.files.length} bestand(en) gekoppeld`
+                      : "Nog geen bestand geüpload"}
+                  </p>
                 </div>
 
                 <Link
