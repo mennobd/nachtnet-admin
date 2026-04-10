@@ -1,17 +1,6 @@
 import Link from "next/link";
-import { prisma } from "@/lib/db";
 
-export default async function RoutesPage() {
-  const routes = await prisma.route.findMany({
-  orderBy: { createdAt: "desc" },
-  include: {
-    files: {
-      orderBy: { createdAt: "desc" },
-      take: 1,
-    },
-  },
-});
-
+export default function RoutesPage() {
   return (
     <div className="space-y-6">
       <section className="rounded-2xl bg-white p-8 shadow-sm">
@@ -33,39 +22,7 @@ export default async function RoutesPage() {
       </section>
 
       <section className="rounded-2xl bg-white p-8 shadow-sm">
-        {routes.length === 0 ? (
-          <p className="text-slate-600">Nog geen routes aangemaakt.</p>
-        ) : (
-          <div className="space-y-4">
-            {routes.map((route) => (
-              <div
-                key={route.id}
-                className="flex items-center justify-between rounded-xl border p-4"
-              >
-                <div>
-                  <p className="font-medium text-slate-900">
-                    {route.title}
-                  </p>
-                  <p className="text-sm text-slate-500">
-                    {route.routeCode}
-                  </p>
-                  <p className="mt-1 text-xs text-slate-400">
-                    {route.files.length > 0
-                      ? `Laatste versie: ${route.files[0].version}`
-                      : "Nog geen bestand geüpload"}
-                  </p>
-                </div>
-
-                <Link
-                  href={`/dashboard/routes/${route.id}/upload`}
-                  className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700"
-                >
-                  Upload GPX
-                </Link>
-              </div>
-            ))}
-          </div>
-        )}
+        <p className="text-slate-600">Routes overzicht werkt.</p>
       </section>
     </div>
   );
