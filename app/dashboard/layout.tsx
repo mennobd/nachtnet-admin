@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export default async function DashboardLayout({
   children,
