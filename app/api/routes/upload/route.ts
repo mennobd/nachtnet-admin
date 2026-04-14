@@ -90,15 +90,19 @@ export async function POST(request: Request) {
     });
 
     await prisma.manifestEntry.create({
-      data: {
-        routeId,
-        fileId: routeFile.id,
-        packageName: "RET_NACHTNET",
-        type: "Regulier",
-        version,
-        active: true,
-      },
-    });
+  data: {
+    routeId,
+    fileId: routeFile.id,
+    packageName: "RET_NACHTNET",
+    type: "Regulier",
+    version,
+    isPublished: false,
+    activeFrom: null,
+    activeUntil: null,
+    priority: 100,
+    notes: null,
+  },
+});
 
     return NextResponse.json({
       success: true,
