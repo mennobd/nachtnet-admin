@@ -5,7 +5,10 @@ export default async function RoutesPage() {
   const routes = await prisma.route.findMany({
     orderBy: { createdAt: "desc" },
     include: {
-      files: true,
+      files: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
     },
   });
 
@@ -44,17 +47,31 @@ export default async function RoutesPage() {
                   <p className="text-sm text-slate-500">{route.routeCode}</p>
                   <p className="mt-1 text-xs text-slate-400">
                     {route.files.length > 0
-                      ? `${route.files.length} bestand(en)`
-                      : "Nog geen bestand"}
+                      ? `Laatste versie: ${route.files[0].version}`
+                      : "Nog geen bestand geüpload"}
                   </p>
                 </div>
 
-                <Link
-                  href={`/dashboard/routes/${route.id}/upload`}
-                  className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700"
-                >
-                  Upload GPX
-                </Link>
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${
+                      route.status === "PUBLISHED"
+                        ? "bg-green-100 text-green-700"
+                        : route.status === "ARCHIVED"
+                        ? "bg-slate-200 text-slate-700"
+                        : "bg-amber-100 text-amber-700"
+                    }`}
+                  >
+                    {route.status}
+                  </span>
+
+                  <Link
+                    href={`/dashboard/routes/${route.id}/upload`}
+                    className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700"
+                  >
+                    Upload GPX
+                  </Link>
+                </div>
               </div>
             ))}
           </div>
