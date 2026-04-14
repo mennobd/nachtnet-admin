@@ -39,7 +39,7 @@ export async function GET() {
           version: entry.version,
           active: entry.active,
           fileName: entry.file.fileName,
-          fileUrl: `${appBaseUrl}/routes/actief/${encodeURIComponent(entry.file.fileName)}`,
+          fileUrl: `${appBaseUrl}/routes/acties/${encodeURIComponent(entry.file.fileName)}`,
           checksum: entry.file.checksum,
         })),
     };
