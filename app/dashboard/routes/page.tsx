@@ -37,51 +37,42 @@ export default async function RoutesPage() {
           <p className="text-slate-600">Nog geen routes aangemaakt.</p>
         ) : (
           <div className="space-y-4">
-            {routes.map((route) => (
-              <div
-                key={route.id}
-                className="flex items-center justify-between rounded-xl border p-4"
-              >
-                <div>
-                  <p className="font-medium text-slate-900">{route.title}</p>
-                  <p className="text-sm text-slate-500">{route.routeCode}</p>
-                  <p className="mt-1 text-xs text-slate-400">
-                    {route.files.length > 0
-                      ? `Laatste versie: ${route.files[0].version}`
-                      : "Nog geen bestand geüpload"}
-                  </p>
-                </div>
+            {routes.map((route) => {
+              const latestFile = route.files[0];
 
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-medium ${
-                      route.status === "PUBLISHED"
-                        ? "bg-green-100 text-green-700"
-                        : route.status === "ARCHIVED"
-                        ? "bg-slate-200 text-slate-700"
-                        : "bg-amber-100 text-amber-700"
-                    }`}
-                  >
-                    {route.status}
-                  </span>
+              return (
+                <div
+                  key={route.id}
+                  className="flex items-center justify-between rounded-xl border p-4"
+                >
+                  <div>
+                    <p className="font-medium text-slate-900">{route.title}</p>
+                    <p className="text-sm text-slate-500">{route.routeCode}</p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {latestFile
+                        ? `Laatste versie: ${latestFile.version}`
+                        : "Nog geen bestand geüpload"}
+                    </p>
+                  </div>
 
-                <div className="flex items-center gap-3">
-                  <Link
-                    href={`/dashboard/routes/${route.id}/publish`}
-                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
+                  <div className="flex items-center gap-3">
+                    <Link
+                      href={`/dashboard/routes/${route.id}/publish`}
+                      className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
                     >
-                    Publiceren
-                  </Link>
-                
-                  <Link
-                    href={`/dashboard/routes/${route.id}/upload`}
-                    className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700"
+                      Publiceren
+                    </Link>
+
+                    <Link
+                      href={`/dashboard/routes/${route.id}/upload`}
+                      className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700"
                     >
-                    Upload GPX
-                  </Link>
+                      Upload GPX
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
