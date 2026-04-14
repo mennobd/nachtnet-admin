@@ -65,11 +65,21 @@ export default async function RoutesPage() {
                     {route.status}
                   </span>
 
-                  <Link
-                    href={`/dashboard/routes/${route.id}/upload`}
-                    className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700"
-                  >
-                    Upload GPX
+                  <div className="flex items-center gap-3">
+                      <Link
+                        href={`/dashboard/routes/${route.id}/publish`}
+                        className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
+                      >
+                        Publiceren
+                      </Link>
+                    
+                      <Link
+                        href={`/dashboard/routes/${route.id}/upload`}
+                        className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700"
+                      >
+                        Upload GPX
+                      </Link>
+                    </div>
                   </Link>
                 </div>
               </div>
