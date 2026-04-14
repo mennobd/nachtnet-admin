@@ -6,8 +6,8 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 const s3 = new S3Client({
   region: process.env.BUCKET_REGION,
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
   },
 });
 
@@ -20,8 +20,29 @@ export async function POST(request: Request) {
 
     if (!file || !routeId) {
       return NextResponse.json(
-        { error: "Bestand of routeId ontbreekt" },
+        { error: "Bestand of routeId ontbreekt." },
         { status: 400 }
+      );
+    }
+
+    if (!process.env.BUCKET_NAME) {
+      return NextResponse.json(
+        { error: "BUCKET_NAME ontbreekt in Railway variables." },
+        { status: 500 }
+      );
+    }
+
+    if (!process.env.BUCKET_REGION) {
+      return NextResponse.json(
+        { error: "BUCKET_REGION ontbreekt in Railway variables." },
+        { status: 500 }
+      );
+    }
+
+    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+      return NextResponse.json(
+        { error: "AWS bucket credentials ontbreken in Railway variables." },
+        { status: 500 }
       );
     }
 
@@ -31,7 +52,7 @@ export async function POST(request: Request) {
 
     if (!route) {
       return NextResponse.json(
-        { error: "Route niet gevonden" },
+        { error: "Route niet gevonden." },
         { status: 404 }
       );
     }
@@ -49,7 +70,7 @@ export async function POST(request: Request) {
 
     await s3.send(
       new PutObjectCommand({
-        Bucket: process.env.BUCKET_NAME!,
+        Bucket: process.env.BUCKET_NAME,
         Key: storageKey,
         Body: buffer,
         ContentType: "application/gpx+xml",
@@ -85,10 +106,13 @@ export async function POST(request: Request) {
       storageKey,
     });
   } catch (error) {
-    console.error(error);
+    console.error("UPLOAD ERROR:", error);
 
     return NextResponse.json(
-      { error: "Upload mislukt" },
+      {
+        error:
+          error instanceof Error ? error.message : "Onbekende uploadfout.",
+      },
       { status: 500 }
     );
   }
