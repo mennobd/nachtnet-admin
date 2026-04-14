@@ -1,57 +1,60 @@
-import "dotenv/config";
-import crypto from "crypto";
+import "server-only";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/db";
 
-export const SESSION_COOKIE_NAME = "nachtnet_admin_session";
+export type SessionUser = {
+  id: string;
+  email: string;
+  role: "ADMIN" | "EDITOR";
+  name: string;
+};
 
-function getSecret() {
-  const secret = process.env.APP_SECRET;
+const SESSION_COOKIE_NAME = "session";
 
-  if (!secret) {
-    throw new Error("APP_SECRET ontbreekt in de environment variables.");
+export async function getCurrentUser(): Promise<SessionUser | null> {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get(SESSION_COOKIE_NAME);
+
+  if (!sessionCookie?.value) {
+    return null;
   }
 
-  return secret;
+  const userId = sessionCookie.value;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      name: true,
+    },
+  });
+
+  if (!user) {
+    return null;
+  }
+
+  return user;
 }
 
-export function createSessionToken(email: string) {
-  const timestamp = Date.now().toString();
-  const payload = `${email}.${timestamp}`;
-  const signature = crypto
-    .createHmac("sha256", getSecret())
-    .update(payload)
-    .digest("hex");
+export async function requireUser(): Promise<SessionUser> {
+  const user = await getCurrentUser();
 
-  return `${payload}.${signature}`;
+  if (!user) {
+    redirect("/login");
+  }
+
+  return user;
 }
 
-export function verifySessionToken(token: string) {
-  const parts = token.split(".");
+export async function requireAdmin(): Promise<SessionUser> {
+  const user = await requireUser();
 
-  if (parts.length < 3) return null;
+  if (user.role !== "ADMIN") {
+    redirect("/dashboard");
+  }
 
-  const signature = parts.pop();
-  const timestamp = parts.pop();
-  const email = parts.join(".");
-
-  if (!signature || !timestamp || !email) return null;
-
-  const payload = `${email}.${timestamp}`;
-  const expectedSignature = crypto
-    .createHmac("sha256", getSecret())
-    .update(payload)
-    .digest("hex");
-
-  if (signature !== expectedSignature) return null;
-
-  return { email };
-}
-
-export async function getSession() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-
-  if (!token) return null;
-
-  return verifySessionToken(token);
+  return user;
 }
