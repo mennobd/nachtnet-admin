@@ -68,13 +68,15 @@ export async function GET() {
           checksum: entry.file.checksum,
         })),
     };
-
-    return NextResponse.json(manifest);
-  } catch (error) {
-    console.error(error);
-
+      return NextResponse.json(manifest);
+    } catch (error) {
+    console.error("MANIFEST ERROR:", error);
+  
     return NextResponse.json(
-      { error: "Fout bij genereren manifest" },
+      {
+        error:
+          error instanceof Error ? error.message : "Onbekende fout bij genereren manifest",
+      },
       { status: 500 }
     );
   }
