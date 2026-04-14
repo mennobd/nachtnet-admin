@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
+import DeleteRouteButton from "@/components/DeleteRouteButton";
 
 export default async function RouteDetailPage({
   params,
@@ -46,19 +47,22 @@ export default async function RouteDetailPage({
         </div>
 
         <div className="mt-6 flex items-center gap-3">
-          <Link
-            href={`/dashboard/routes/${route.id}/publish`}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-          >
-            Publiceren
-          </Link>
-
-          <Link
-            href={`/dashboard/routes/${route.id}/upload`}
-            className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700"
-          >
-            Upload GPX
-          </Link>
+            <Link
+              href={`/dashboard/routes/${route.id}/publish`}
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
+            >
+              Publiceren
+            </Link>
+          
+            <Link
+              href={`/dashboard/routes/${route.id}/upload`}
+              className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700"
+            >
+              Upload GPX
+            </Link>
+          
+            <DeleteRouteButton routeId={route.id} routeTitle={route.title} />
+          </div>
         </div>
       </section>
     </div>
