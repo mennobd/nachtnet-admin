@@ -1,34 +1,6 @@
 import { notFound } from "next/navigation";
+import { prisma } from "@/lib/db";
 import UploadRouteFileForm from "@/components/UploadRouteFileForm";
-
-type RouteDetail = {
-  id: string;
-  routeCode: string;
-  title: string;
-  lineNumber: string;
-  direction: string;
-  depot: string;
-  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
-};
-
-async function getRoute(routeId: string): Promise<RouteDetail | null> {
-  const appBaseUrl = process.env.APP_BASE_URL;
-
-  if (!appBaseUrl) {
-    throw new Error("APP_BASE_URL ontbreekt in de environment variables.");
-  }
-
-  const response = await fetch(`${appBaseUrl}/api/routes`, {
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error("Kon routes niet ophalen.");
-  }
-
-  const routes: RouteDetail[] = await response.json();
-  return routes.find((route) => route.id === routeId) ?? null;
-}
 
 export default async function UploadRoutePage({
   params,
@@ -36,7 +8,19 @@ export default async function UploadRoutePage({
   params: Promise<{ routeId: string }>;
 }) {
   const { routeId } = await params;
-  const route = await getRoute(routeId);
+
+  const route = await prisma.route.findUnique({
+    where: { id: routeId },
+    select: {
+      id: true,
+      title: true,
+      routeCode: true,
+      lineNumber: true,
+      direction: true,
+      depot: true,
+      status: true,
+    },
+  });
 
   if (!route) {
     notFound();
