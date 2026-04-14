@@ -119,7 +119,9 @@ export default async function DashboardPage() {
               <div>
                 <p className="font-medium">{r.title}</p>
                 <p className="text-xs text-slate-500">
-                  {new Date(r.latest.activeFrom).toLocaleString("nl-NL")}
+                  {r.latest?.activeFrom
+                    ? new Date(r.latest.activeFrom).toLocaleString("nl-NL")
+                    : "Geen starttijd ingesteld"}
                 </p>
               </div>
 
