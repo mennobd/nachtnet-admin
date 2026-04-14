@@ -66,9 +66,7 @@ export default async function RouteDetailPage({
       </section>
 
       <section className="rounded-2xl bg-white p-8 shadow-sm">
-        <h3 className="text-lg font-semibold text-slate-900">
-          Bestanden
-        </h3>
+        <h3 className="text-lg font-semibold text-slate-900">Bestanden</h3>
 
         {route.files.length === 0 ? (
           <p className="mt-4 text-sm text-slate-600">
@@ -91,9 +89,7 @@ export default async function RouteDetailPage({
       </section>
 
       <section className="rounded-2xl bg-white p-8 shadow-sm">
-        <h3 className="text-lg font-semibold text-slate-900">
-          Publicaties
-        </h3>
+        <h3 className="text-lg font-semibold text-slate-900">Publicaties</h3>
 
         {route.manifestEntries.length === 0 ? (
           <p className="mt-4 text-sm text-slate-600">
