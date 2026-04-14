@@ -44,8 +44,8 @@ export default async function RoutesPage() {
                   <p className="text-sm text-slate-500">{route.routeCode}</p>
                   <p className="mt-1 text-xs text-slate-400">
                     {route.files.length > 0
-                      ? `${route.files.length} bestand(en) gekoppeld`
-                      : "Nog geen bestand geüpload"}
+                      ? `${route.files.length} bestand(en)`
+                      : "Nog geen bestand"}
                   </p>
                 </div>
 
