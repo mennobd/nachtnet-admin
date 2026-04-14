@@ -32,13 +32,23 @@ export default function UploadRouteFileForm({
         body: formData,
       });
 
-      const data = await response.json();
+      let data: any = null;
 
-      if (!response.ok) {
-        setStatus(data.error || "Upload mislukt.");
-        setLoading(false);
-        return;
-      }
+try {
+  data = await response.json();
+} catch {
+  data = null;
+}
+
+if (!response.ok) {
+  setStatus(
+    data?.error
+      ? `Upload mislukt: ${data.error}`
+      : `Upload mislukt met status ${response.status}`
+  );
+  setLoading(false);
+  return;
+}
 
       setStatus(
         `Upload gelukt. Bestand: ${data.fileName}, versie: ${data.version}`
