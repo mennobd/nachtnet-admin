@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { writeAuditLog } from "@/lib/audit";
 
 export async function DELETE(
   request: Request,
@@ -10,7 +11,11 @@ export async function DELETE(
 
     const route = await prisma.route.findUnique({
       where: { id: routeId },
-      select: { id: true },
+      select: {
+        id: true,
+        routeCode: true,
+        title: true,
+      },
     });
 
     if (!route) {
@@ -30,6 +35,16 @@ export async function DELETE(
 
     await prisma.route.delete({
       where: { id: routeId },
+    });
+
+    await writeAuditLog({
+      action: "ROUTE_DELETED",
+      entity: "route",
+      entityId: routeId,
+      metadata: {
+        routeCode: route.routeCode,
+        title: route.title,
+      },
     });
 
     return NextResponse.json({ success: true });
