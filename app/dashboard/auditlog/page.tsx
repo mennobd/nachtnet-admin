@@ -42,7 +42,9 @@ export default async function AuditlogPage() {
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1">
-                    <p className="font-medium text-slate-900">{log.action}</p>
+                    <p className="font-medium text-slate-900">
+                      {log.action}
+                    </p>
                     <p className="text-slate-500">
                       Entiteit: {log.entity} · ID: {log.entityId}
                     </p>
@@ -52,7 +54,6 @@ export default async function AuditlogPage() {
                         ? `${log.user.name} (${log.user.email})`
                         : "Onbekend of systeemactie"}
                     </p>
-
                     {log.metadata ? (
                       <pre className="mt-2 overflow-x-auto rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
                         {JSON.stringify(log.metadata, null, 2)}
