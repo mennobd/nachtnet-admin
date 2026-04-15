@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { writeAuditLog } from "@/lib/audit";
+import { writeAuditLog } from "@/lib/audit";
 
 // GET → alle routes ophalen
 export async function GET() {
@@ -52,6 +53,18 @@ export async function POST(request: Request) {
         notes,
       },
     });
+
+    await writeAuditLog({
+        action: "ROUTE_CREATED",
+        entity: "route",
+        entityId: route.id,
+        metadata: {
+          routeCode: route.routeCode,
+          title: route.title,
+          lineNumber: route.lineNumber,
+          depot: route.depot,
+        },
+      });
 
     return NextResponse.json(route);
   } catch (error: any) {
