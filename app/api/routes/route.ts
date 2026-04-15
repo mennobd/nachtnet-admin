@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { writeAuditLog } from "@/lib/audit";
 
 // GET → alle routes ophalen
 export async function GET() {
