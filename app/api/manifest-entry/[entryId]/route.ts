@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { writeAuditLog } from "@/lib/audit";
 
 export async function PATCH(
   request: Request,
@@ -61,6 +62,19 @@ export async function PATCH(
         activeUntil,
         priority,
         notes,
+      },
+    });
+
+    await writeAuditLog({
+      action: "PUBLICATION_UPDATED",
+      entity: "manifestEntry",
+      entityId: updated.id,
+      metadata: {
+        isPublished: updated.isPublished,
+        activeFrom: updated.activeFrom,
+        activeUntil: updated.activeUntil,
+        priority: updated.priority,
+        notes: updated.notes,
       },
     });
 
