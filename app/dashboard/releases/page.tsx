@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import RollbackReleaseButton from "@/components/RollbackReleaseButton";
 
 function getPublicationState(entry: {
   isPublished: boolean;
@@ -63,7 +64,7 @@ export default async function ReleasesPage({
       q === "" ||
       entry.route.title.toLowerCase().includes(q) ||
       entry.route.routeCode.toLowerCase().includes(q) ||
-      entry.file.fileName.toLowerCase().includes(q) ||
+      (entry.file?.fileName ?? "").toLowerCase().includes(q) ||
       entry.version.toLowerCase().includes(q);
 
     const matchesStatus =
@@ -72,6 +73,32 @@ export default async function ReleasesPage({
 
     return matchesQuery && matchesStatus;
   });
+
+  const grouped = filteredEntries.reduce<
+    Record<
+      string,
+      {
+        routeId: string;
+        routeTitle: string;
+        routeCode: string;
+        items: typeof filteredEntries;
+      }
+    >
+  >((acc, entry) => {
+    if (!acc[entry.routeId]) {
+      acc[entry.routeId] = {
+        routeId: entry.routeId,
+        routeTitle: entry.route.title,
+        routeCode: entry.route.routeCode,
+        items: [],
+      };
+    }
+
+    acc[entry.routeId].items.push(entry);
+    return acc;
+  }, {});
+
+  const groups = Object.values(grouped);
 
   const totalReleases = enrichedEntries.length;
   const liveCount = enrichedEntries.filter(
@@ -89,7 +116,7 @@ export default async function ReleasesPage({
       <section className="rounded-2xl bg-white p-8 shadow-sm">
         <h2 className="text-2xl font-semibold text-slate-900">Releases</h2>
         <p className="mt-2 text-slate-600">
-          Centraal overzicht van alle publicaties, versies en tijdvakken.
+          Centraal overzicht van alle versies, publicaties en rollback-mogelijkheden.
         </p>
       </section>
 
@@ -134,7 +161,7 @@ export default async function ReleasesPage({
               name="q"
               defaultValue={params.q ?? ""}
               placeholder="Zoek op route, routecode, bestand of versie"
-              className="w-full rounded-xl border border-slate-300 px-4 py-3"
+              className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-slate-500"
             />
           </div>
 
@@ -145,7 +172,7 @@ export default async function ReleasesPage({
             <select
               name="status"
               defaultValue={statusFilter}
-              className="w-full rounded-xl border border-slate-300 px-4 py-3"
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
             >
               <option value="alles">Alles</option>
               <option value="live">Live</option>
@@ -173,71 +200,97 @@ export default async function ReleasesPage({
         </form>
       </section>
 
-      <section className="rounded-2xl bg-white p-8 shadow-sm">
-        {filteredEntries.length === 0 ? (
-          <p className="text-slate-600">Geen releases gevonden.</p>
-        ) : (
-          <div className="space-y-4">
-            {filteredEntries.map((entry) => (
-              <div
-                key={entry.id}
-                className="flex items-center justify-between rounded-xl border p-4"
-              >
-                <div className="space-y-1">
-                  <p className="font-medium text-slate-900">
-                    {entry.route.title}
-                  </p>
-                  <p className="text-sm text-slate-500">
-                    {entry.route.routeCode} · {entry.file.fileName}
-                  </p>
-                  <p className="text-xs text-slate-400">
-                    Versie: {entry.version}
-                  </p>
-
-                  <div className="flex flex-wrap items-center gap-2 pt-1">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusClasses(
-                        entry.publicationState
-                      )}`}
-                    >
-                      {entry.publicationState}
-                    </span>
-
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-                      Prioriteit {entry.priority}
-                    </span>
-
-                    {entry.activeFrom ? (
-                      <span className="text-xs text-slate-500">
-                        Vanaf: {new Date(entry.activeFrom).toLocaleString("nl-NL")}
-                      </span>
-                    ) : null}
-
-                    {entry.activeUntil ? (
-                      <span className="text-xs text-slate-500">
-                        Tot: {new Date(entry.activeUntil).toLocaleString("nl-NL")}
-                      </span>
-                    ) : null}
-                  </div>
-
-                  {entry.notes ? (
-                    <p className="pt-1 text-xs text-slate-500">
-                      Notitie: {entry.notes}
-                    </p>
-                  ) : null}
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Link
-                    href={`/dashboard/routes/${entry.routeId}/publish`}
-                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                  >
-                    Beheren
-                  </Link>
-                </div>
-              </div>
-            ))}
+      <section className="space-y-4">
+        {groups.length === 0 ? (
+          <div className="rounded-2xl bg-white p-8 shadow-sm">
+            <p className="text-slate-600">Geen releases gevonden.</p>
           </div>
+        ) : (
+          groups.map((group) => (
+            <div key={group.routeId} className="rounded-2xl bg-white p-8 shadow-sm">
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    {group.routeTitle}
+                  </h3>
+                  <p className="text-sm text-slate-500">{group.routeCode}</p>
+                </div>
+
+                <Link
+                  href={`/dashboard/routes/${group.routeId}/publish`}
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
+                >
+                  Beheren
+                </Link>
+              </div>
+
+              <div className="space-y-3">
+                {group.items.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="flex items-center justify-between rounded-xl border p-4"
+                  >
+                    <div className="space-y-1">
+                      <p className="font-medium text-slate-900">
+                        {entry.file?.fileName ?? "Onbekend bestand"}
+                      </p>
+
+                      <p className="text-sm text-slate-500">
+                        Versie: {entry.version}
+                      </p>
+
+                      <div className="flex flex-wrap items-center gap-2 pt-1">
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusClasses(
+                            entry.publicationState
+                          )}`}
+                        >
+                          {entry.publicationState}
+                        </span>
+
+                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                          Prioriteit {entry.priority}
+                        </span>
+
+                        {entry.activeFrom ? (
+                          <span className="text-xs text-slate-500">
+                            Vanaf: {new Date(entry.activeFrom).toLocaleString("nl-NL")}
+                          </span>
+                        ) : null}
+
+                        {entry.activeUntil ? (
+                          <span className="text-xs text-slate-500">
+                            Tot: {new Date(entry.activeUntil).toLocaleString("nl-NL")}
+                          </span>
+                        ) : null}
+                      </div>
+
+                      {entry.notes ? (
+                        <p className="text-xs text-slate-500">
+                          Notitie: {entry.notes}
+                        </p>
+                      ) : null}
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <RollbackReleaseButton
+                        entryId={entry.id}
+                        routeTitle={group.routeTitle}
+                        version={entry.version}
+                      />
+
+                      <Link
+                        href={`/dashboard/routes/${group.routeId}/publish`}
+                        className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
+                      >
+                        Openen
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))
         )}
       </section>
     </div>
