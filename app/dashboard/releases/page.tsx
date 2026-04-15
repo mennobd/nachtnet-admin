@@ -286,12 +286,20 @@ export default async function ReleasesPage({
                     </div>
 
                     <div className="flex items-center gap-3">
+                      {entry.publicationState === "Concept" ? (
+                        <PublishReleaseButton
+                          entryId={entry.id}
+                          routeTitle={group.routeTitle}
+                          version={entry.version}
+                        />
+                      ) : null}
+                    
                       <RollbackReleaseButton
                         entryId={entry.id}
                         routeTitle={group.routeTitle}
                         version={entry.version}
                       />
-
+                    
                       <Link
                         href={`/dashboard/routes/${group.routeId}/publish`}
                         className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
