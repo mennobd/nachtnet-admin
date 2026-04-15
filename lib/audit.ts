@@ -1,6 +1,5 @@
 import "server-only";
 
-import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -13,7 +12,7 @@ export async function writeAuditLog({
   action: string;
   entity: string;
   entityId: string;
-  metadata?: Prisma.InputJsonValue;
+  metadata?: Record<string, unknown>;
 }) {
   try {
     const user = await getCurrentUser();
@@ -23,7 +22,7 @@ export async function writeAuditLog({
         action,
         entity,
         entityId,
-        metadata,
+        metadata: metadata ?? undefined,
         userId: user?.id ?? null,
       },
     });
