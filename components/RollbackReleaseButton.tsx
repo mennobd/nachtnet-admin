@@ -3,15 +3,17 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+type RollbackReleaseButtonProps = {
+  entryId: string;
+  routeTitle: string;
+  version: string;
+};
+
 export default function RollbackReleaseButton({
   entryId,
   routeTitle,
   version,
-}: {
-  entryId: string;
-  routeTitle: string;
-  version: string;
-}) {
+}: RollbackReleaseButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
