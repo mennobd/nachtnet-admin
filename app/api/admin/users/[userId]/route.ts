@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { writeAuditLog } from "@/lib/audit";
 
 export async function PATCH(
   request: Request,
@@ -53,6 +54,17 @@ export async function PATCH(
         email: true,
         role: true,
         createdAt: true,
+      },
+    });
+
+    await writeAuditLog({
+      action: "USER_UPDATED",
+      entity: "user",
+      entityId: updatedUser.id,
+      metadata: {
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
       },
     });
 
