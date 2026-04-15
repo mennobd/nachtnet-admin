@@ -1,8 +1,7 @@
-// Release overview page
-
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import RollbackReleaseButton from "@/components/RollbackReleaseButton";
+import PublishReleaseButton from "@/components/PublishReleaseButton";
 
 function getPublicationState(entry: {
   isPublished: boolean;
@@ -116,11 +115,23 @@ export default async function ReleasesPage({
   return (
     <div className="space-y-6">
       <section className="rounded-2xl bg-white p-8 shadow-sm">
-        <h2 className="text-2xl font-semibold text-slate-900">Releases</h2>
-        <p className="mt-2 text-slate-600">
-          Centraal overzicht van alle versies, publicaties en rollback-mogelijkheden.
-        </p>
-      </section>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-semibold text-slate-900">Releases</h2>
+            <p className="mt-2 text-slate-600">
+              Centraal overzicht van alle versies, publicaties en rollbackmogelijkheden.
+            </p>
+          </div>
+          <a
+            href="/api/manifest/live"
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-lg border border-slate-300 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100"
+    >
+      Open actueel manifest
+    </a>
+  </div>
+</section>
 
       <section className="grid gap-4 md:grid-cols-4">
         <div className="rounded-2xl bg-white p-6 shadow-sm">
