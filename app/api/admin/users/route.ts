@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { writeAuditLog } from "@/lib/audit";
 
 export async function GET() {
   await requireAdmin();
@@ -65,6 +66,17 @@ export async function POST(request: Request) {
         email: true,
         role: true,
         createdAt: true,
+      },
+    });
+
+    await writeAuditLog({
+      action: "USER_CREATED",
+      entity: "user",
+      entityId: user.id,
+      metadata: {
+        name: user.name,
+        email: user.email,
+        role: user.role,
       },
     });
 
