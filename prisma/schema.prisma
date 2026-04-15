@@ -19,6 +19,20 @@ model User {
   role         UserRole @default(EDITOR)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  auditLogs    AuditLog[]
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
 }
 
 enum RouteStatus {
