@@ -1,11 +1,21 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { writeAuditLog } from "@/lib/audit";
+import { getRequiredMutationUser } from "@/lib/auth";
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ entryId: string }> }
 ) {
+  const user = await getRequiredMutationUser();
+
+  if (!user) {
+    return NextResponse.json(
+      { error: "Geen rechten voor deze actie." },
+      { status: 403 }
+    );
+  }
+
   try {
     const { entryId } = await params;
 
@@ -80,6 +90,7 @@ export async function POST(
         routeCode: rolledBackEntry.route?.routeCode ?? null,
         fileName: rolledBackEntry.file?.fileName ?? null,
         version: rolledBackEntry.version,
+        performedBy: user.email,
       },
     });
 
