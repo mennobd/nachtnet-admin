@@ -79,3 +79,17 @@ export async function requireMutationAccess(): Promise<SessionUser> {
 
   return user;
 }
+
+export async function getRequiredMutationUser(): Promise<SessionUser | null> {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return null;
+  }
+
+  if (user.role === "VIEWER") {
+    return null;
+  }
+
+  return user;
+}
