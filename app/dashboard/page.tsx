@@ -52,11 +52,7 @@ export default async function DashboardPage() {
     return diff > 0 && diff < 72 * 60 * 60 * 1000;
   });
 
-  const pendingApprovals = await prisma.manifestEntry.count({
-    where: {
-      approvalStatus: "PENDING",
-    },
-  }).catch(() => 0);
+  const pendingApprovals = 0;
 
   return (
     <div className="space-y-6">
