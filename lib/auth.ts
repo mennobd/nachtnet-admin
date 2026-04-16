@@ -1,13 +1,14 @@
 import "server-only";
+
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 
 export type SessionUser = {
   id: string;
-  email: string;
-  role: "ADMIN" | "EDITOR";
   name: string;
+  email: string;
+  role: "ADMIN" | "EDITOR" | "VIEWER";
 };
 
 const SESSION_COOKIE_NAME = "session";
@@ -26,9 +27,9 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     where: { id: userId },
     select: {
       id: true,
+      name: true,
       email: true,
       role: true,
-      name: true,
     },
   });
 
@@ -53,6 +54,16 @@ export async function requireAdmin(): Promise<SessionUser> {
   const user = await requireUser();
 
   if (user.role !== "ADMIN") {
+    redirect("/dashboard");
+  }
+
+  return user;
+}
+
+export async function requireEditor(): Promise<SessionUser> {
+  const user = await requireUser();
+
+  if (user.role !== "ADMIN" && user.role !== "EDITOR") {
     redirect("/dashboard");
   }
 
