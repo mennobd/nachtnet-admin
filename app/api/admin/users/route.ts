@@ -31,11 +31,11 @@ export async function POST(request: Request) {
     const email = String(body.email ?? "").trim().toLowerCase();
     const password = String(body.password ?? "");
     const role =
-        body.role === "ADMIN"
-          ? "ADMIN"
-          : body.role === "EDITOR"
-          ? "EDITOR"
-          : "VIEWER";
+      body.role === "ADMIN"
+        ? "ADMIN"
+        : body.role === "EDITOR"
+        ? "EDITOR"
+        : "VIEWER";
 
     if (!name || !email || !password) {
       return NextResponse.json(
@@ -90,7 +90,12 @@ export async function POST(request: Request) {
     console.error("CREATE USER ERROR:", error);
 
     return NextResponse.json(
-      { error: "Gebruiker aanmaken mislukt." },
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Gebruiker aanmaken mislukt.",
+      },
       { status: 500 }
     );
   }
