@@ -12,7 +12,7 @@ export default function EditUserForm({
   userId: string;
   initialName: string;
   initialEmail: string;
-  initialRole: "ADMIN" | "EDITOR";
+  initialRole: "ADMIN" | "EDITOR" | "VIEWER";
 }) {
   const router = useRouter();
 
@@ -96,9 +96,15 @@ export default function EditUserForm({
           </label>
           <select
             value={role}
-            onChange={(e) => setRole(e.target.value as "ADMIN" | "EDITOR")}
+            onChange={(e) =>
+              setRole(e.target.value as "ADMIN" | "EDITOR" | "VIEWER")
+            }
             className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
           >
+            <option value="VIEWER">VIEWER</option>
+            <option value="EDITOR">EDITOR</option>
+            <option value="ADMIN">ADMIN</option>
+          </select>
             <option value="EDITOR">EDITOR</option>
             <option value="ADMIN">ADMIN</option>
           </select>
