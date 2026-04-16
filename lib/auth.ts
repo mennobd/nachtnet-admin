@@ -69,3 +69,13 @@ export async function requireEditor(): Promise<SessionUser> {
 
   return user;
 }
+
+export async function requireMutationAccess(): Promise<SessionUser> {
+  const user = await requireUser();
+
+  if (user.role === "VIEWER") {
+    redirect("/dashboard");
+  }
+
+  return user;
+}
