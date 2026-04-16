@@ -14,6 +14,7 @@ export async function GET() {
       name: true,
       email: true,
       role: true,
+      isActive: true,
       createdAt: true,
     },
   });
@@ -64,12 +65,14 @@ export async function POST(request: Request) {
         email,
         passwordHash,
         role,
+        isActive: true,
       },
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
+        isActive: true,
         createdAt: true,
       },
     });
@@ -82,6 +85,7 @@ export async function POST(request: Request) {
         name: user.name,
         email: user.email,
         role: user.role,
+        isActive: user.isActive,
       },
     });
 
