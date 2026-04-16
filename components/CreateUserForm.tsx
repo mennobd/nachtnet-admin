@@ -132,9 +132,10 @@ export default function CreateUserForm() {
           >
             <option value="EDITOR">EDITOR</option>
             <option value="ADMIN">ADMIN</option>
+            <option value="VIEWER">VIEWER</option>
           </select>
           <p className="mt-1 text-xs text-slate-500">
-            EDITOR beheert routes en publicaties. ADMIN beheert ook gebruikers.
+            VIEWER kijkt alleen mee. EDITOR beheert routes en publicaties. ADMIN beheert ook gebruikers.
           </p>
         </div>
       </div>
