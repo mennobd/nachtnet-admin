@@ -176,6 +176,7 @@ export default function CreateRouteForm() {
             <option value="Zuid">Zuid</option>
             <option value="Kleiweg">Kleiweg</option>
             <option value="Krimpen">Krimpen</option>
+            <option value="NACHTNET">NACHTNET</option>
           </select>
           <p className="mt-1 text-xs text-slate-500">
             Kies altijd uit de vaste vestigingen voor consistente filtering.
