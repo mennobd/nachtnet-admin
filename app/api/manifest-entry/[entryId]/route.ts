@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { writeAuditLog } from "@/lib/audit";
 import { getCurrentUser, getRequiredMutationUser } from "@/lib/auth";
+import { validateManifestEntryForPublish } from "@/lib/release-validation";
 
 export async function PATCH(
   request: Request,
@@ -96,31 +97,13 @@ export async function PATCH(
     }
 
     if (isPublished) {
-      if (!existingEntry.file) {
-        return NextResponse.json(
-          { error: "Deze publicatie heeft geen gekoppeld bestand en kan niet live." },
-          { status: 400 }
-        );
-      }
+      const validation = await validateManifestEntryForPublish(entryId);
 
-      if (!existingEntry.route) {
-        return NextResponse.json(
-          { error: "Deze publicatie heeft geen gekoppelde route en kan niet live." },
-          { status: 400 }
-        );
-      }
-
-      if (
-        !existingEntry.route.routeCode ||
-        !existingEntry.route.title ||
-        !existingEntry.route.lineNumber ||
-        !existingEntry.route.direction ||
-        !existingEntry.route.depot
-      ) {
+      if (!validation.valid) {
         return NextResponse.json(
           {
-            error:
-              "De route is niet volledig ingevuld. Controleer routecode, titel, lijnnummer, richting en vestiging.",
+            error: "Deze release kan niet live worden gezet.",
+            validationErrors: validation.errors,
           },
           { status: 400 }
         );
