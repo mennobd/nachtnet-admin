@@ -9,6 +9,7 @@ export type SessionUser = {
   name: string;
   email: string;
   role: "ADMIN" | "EDITOR" | "VIEWER";
+  isActive: boolean;
 };
 
 const SESSION_COOKIE_NAME = "session";
@@ -30,10 +31,11 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
       name: true,
       email: true,
       role: true,
+      isActive: true,
     },
   });
 
-  if (!user) {
+  if (!user || !user.isActive) {
     return null;
   }
 
