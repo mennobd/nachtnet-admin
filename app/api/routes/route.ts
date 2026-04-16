@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { writeAuditLog } from "@/lib/audit";
+import { getRequiredMutationUser } from "@/lib/auth";
 
 // GET → alle routes ophalen
 export async function GET() {
@@ -23,6 +24,14 @@ export async function GET() {
 // POST → nieuwe route aanmaken
 export async function POST(request: Request) {
   try {
+    const user = await getRequiredMutationUser();
+
+if (!user) {
+  return NextResponse.json(
+    { error: "Geen rechten voor deze actie." },
+    { status: 403 }
+  );
+}
     const body = await request.json();
 
     const {
