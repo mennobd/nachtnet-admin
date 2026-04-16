@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import RollbackReleaseButton from "@/components/RollbackReleaseButton";
 import PublishReleaseButton from "@/components/PublishReleaseButton";
+import ReleasesBulkActions from "@/components/ReleasesBulkActions";
 
 function getPublicationState(entry: {
   isPublished: boolean;
@@ -212,6 +213,15 @@ export default async function ReleasesPage({
           </div>
         </form>
       </section>
+
+      <ReleasesBulkActions
+        releases={filteredEntries.map((entry) => ({
+          id: entry.id,
+          routeTitle: entry.route.title,
+          version: entry.version,
+          publicationState: entry.publicationState,
+        }))}
+      />
 
       <section className="space-y-4">
         {groups.length === 0 ? (
