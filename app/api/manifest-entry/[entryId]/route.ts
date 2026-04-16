@@ -1,11 +1,21 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { writeAuditLog } from "@/lib/audit";
+import { getCurrentUser, getRequiredMutationUser } from "@/lib/auth";
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ entryId: string }> }
 ) {
+  const mutationUser = await getRequiredMutationUser();
+
+  if (!mutationUser) {
+    return NextResponse.json(
+      { error: "Geen rechten voor deze actie." },
+      { status: 403 }
+    );
+  }
+
   try {
     const { entryId } = await params;
     const body = await request.json();
@@ -73,6 +83,15 @@ export async function PATCH(
       return NextResponse.json(
         { error: "Publicatie niet gevonden." },
         { status: 404 }
+      );
+    }
+
+    const currentUser = await getCurrentUser();
+
+    if (!currentUser) {
+      return NextResponse.json(
+        { error: "Niet ingelogd." },
+        { status: 401 }
       );
     }
 
@@ -149,6 +168,7 @@ export async function PATCH(
         activeUntil: updated.activeUntil,
         priority: updated.priority,
         notes: updated.notes,
+        performedBy: currentUser.email,
       },
     });
 
