@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { writeAuditLog } from "@/lib/audit";
 import { getRequiredMutationUser } from "@/lib/auth";
+import { validateManifestEntryForPublish } from "@/lib/release-validation";
 
 export async function POST(
   request: Request,
@@ -19,6 +20,18 @@ export async function POST(
   try {
     const { entryId } = await params;
 
+    const validation = await validateManifestEntryForPublish(entryId);
+
+    if (!validation.valid) {
+      return NextResponse.json(
+        {
+          error: "Rollback niet mogelijk: release voldoet niet aan de validatie.",
+          validationErrors: validation.errors,
+        },
+        { status: 400 }
+      );
+    }
+
     const targetEntry = await prisma.manifestEntry.findUnique({
       where: { id: entryId },
       include: {
@@ -31,30 +44,6 @@ export async function POST(
       return NextResponse.json(
         { error: "Release niet gevonden." },
         { status: 404 }
-      );
-    }
-
-    if (!targetEntry.file) {
-      return NextResponse.json(
-        { error: "Rollback niet mogelijk: release heeft geen gekoppeld bestand." },
-        { status: 400 }
-      );
-    }
-
-    if (
-      !targetEntry.route ||
-      !targetEntry.route.routeCode ||
-      !targetEntry.route.title ||
-      !targetEntry.route.lineNumber ||
-      !targetEntry.route.direction ||
-      !targetEntry.route.depot
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "Rollback niet mogelijk: de gekoppelde route is niet volledig ingevuld.",
-        },
-        { status: 400 }
       );
     }
 
