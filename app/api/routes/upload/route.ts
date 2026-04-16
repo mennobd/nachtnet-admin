@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import crypto from "crypto";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getRequiredMutationUser } from "@/lib/auth";
 
 const s3 = new S3Client({
   region: process.env.BUCKET_REGION || "auto",
@@ -15,6 +16,14 @@ const s3 = new S3Client({
 
 export async function POST(request: Request) {
   try {
+    const user = await getRequiredMutationUser();
+
+if (!user) {
+  return NextResponse.json(
+    { error: "Geen rechten voor deze actie." },
+    { status: 403 }
+  );
+}
     const formData = await request.formData();
 
     const file = formData.get("file") as File | null;
