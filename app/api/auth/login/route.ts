@@ -1,16 +1,19 @@
-import { prisma } from "@/lib/db";
-import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/db";
+
+const SESSION_COOKIE_NAME = "session";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+
     const email = String(body.email ?? "").trim().toLowerCase();
     const password = String(body.password ?? "");
 
     if (!email || !password) {
       return NextResponse.json(
-        { error: "E-mail en wachtwoord zijn verplicht." },
+        { error: "E-mailadres en wachtwoord zijn verplicht." },
         { status: 400 }
       );
     }
@@ -19,10 +22,10 @@ export async function POST(request: Request) {
       where: { email },
       select: {
         id: true,
-        name: true,
         email: true,
-        role: true,
+        name: true,
         passwordHash: true,
+        isActive: true,
       },
     });
 
@@ -33,9 +36,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const passwordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!user.isActive) {
+      return NextResponse.json(
+        { error: "Dit account is gedeactiveerd." },
+        { status: 403 }
+      );
+    }
 
-    if (!passwordValid) {
+    const validPassword = await bcrypt.compare(password, user.passwordHash);
+
+    if (!validPassword) {
       return NextResponse.json(
         { error: "Ongeldige inloggegevens." },
         { status: 401 }
@@ -46,18 +56,16 @@ export async function POST(request: Request) {
       success: true,
       user: {
         id: user.id,
-        name: user.name,
         email: user.email,
-        role: user.role,
+        name: user.name,
       },
     });
 
-    response.cookies.set("session", user.id, {
+    response.cookies.set(SESSION_COOKIE_NAME, user.id, {
       httpOnly: true,
       secure: true,
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7,
     });
 
     return response;
