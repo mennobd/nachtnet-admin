@@ -15,7 +15,12 @@ export async function PATCH(
 
     const name = String(body.name ?? "").trim();
     const email = String(body.email ?? "").trim().toLowerCase();
-    const role = body.role === "ADMIN" ? "ADMIN" : "EDITOR";
+    const role =
+      body.role === "ADMIN"
+        ? "ADMIN"
+        : body.role === "EDITOR"
+        ? "EDITOR"
+        : "VIEWER";
 
     if (!name || !email) {
       return NextResponse.json(
