@@ -57,6 +57,7 @@ export async function GET() {
           routeId: entry.route.routeCode,
           lineNumber: entry.route.lineNumber,
           title: entry.route.title,
+          depot: entry.route.depot,
           packageName: entry.packageName,
           type: entry.type,
           version: entry.version,
