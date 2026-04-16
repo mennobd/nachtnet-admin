@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+type UserRole = "ADMIN" | "EDITOR" | "VIEWER";
+
 export default function EditUserForm({
   userId,
   initialName,
@@ -12,13 +14,13 @@ export default function EditUserForm({
   userId: string;
   initialName: string;
   initialEmail: string;
-  initialRole: "ADMIN" | "EDITOR" | "VIEWER";
+  initialRole: UserRole;
 }) {
   const router = useRouter();
 
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
-  const [role, setRole] = useState(initialRole);
+  const [role, setRole] = useState<UserRole>(initialRole);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
@@ -60,7 +62,10 @@ export default function EditUserForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-4 space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+    <form
+      onSubmit={handleSubmit}
+      className="mt-4 space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4"
+    >
       <div className="grid gap-4 md:grid-cols-3">
         <div>
           <label className="mb-2 block text-sm font-medium text-slate-700">
@@ -96,15 +101,10 @@ export default function EditUserForm({
           </label>
           <select
             value={role}
-            onChange={(e) =>
-              setRole(e.target.value as "ADMIN" | "EDITOR" | "VIEWER")
-            }
+            onChange={(e) => setRole(e.target.value as UserRole)}
             className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
           >
             <option value="VIEWER">VIEWER</option>
-            <option value="EDITOR">EDITOR</option>
-            <option value="ADMIN">ADMIN</option>
-          </select>
             <option value="EDITOR">EDITOR</option>
             <option value="ADMIN">ADMIN</option>
           </select>
