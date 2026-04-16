@@ -1,11 +1,21 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { writeAuditLog } from "@/lib/audit";
+import { getRequiredMutationUser } from "@/lib/auth";
 
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ routeId: string }> }
 ) {
+  const user = await getRequiredMutationUser();
+
+  if (!user) {
+    return NextResponse.json(
+      { error: "Geen rechten voor deze actie." },
+      { status: 403 }
+    );
+  }
+
   try {
     const { routeId } = await params;
 
@@ -44,6 +54,7 @@ export async function DELETE(
       metadata: {
         routeCode: route.routeCode,
         title: route.title,
+        performedBy: user.email,
       },
     });
 
