@@ -52,7 +52,7 @@ export default async function DashboardPage() {
     return diff > 0 && diff < 72 * 60 * 60 * 1000;
   });
 
-  const pendingApprovals = 0;
+  const manifestHealthy = live.length > 0;
 
   return (
     <div className="space-y-6">
@@ -61,7 +61,7 @@ export default async function DashboardPage() {
           <div>
             <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
             <p className="mt-2 text-slate-600">
-              Overzicht van routes, publicaties en aandachtspunten.
+              Overzicht van routes, publicaties en operationele aandachtspunten.
             </p>
             <p className="mt-2 text-sm text-slate-500">
               Ingelogd als {user.name} · {user.role}
@@ -89,30 +89,52 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-5">
+      <section className="grid gap-4 md:grid-cols-6">
         <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="text-sm text-slate-500">Zonder upload</p>
-          <p className="text-3xl font-semibold">{withoutUpload.length}</p>
+          <p className="text-sm text-slate-500">Manifest status</p>
+          <p className="mt-2 text-2xl font-semibold text-slate-900">
+            {manifestHealthy ? "Gezond" : "Waarschuwing"}
+          </p>
+          <p className="mt-1 text-xs text-slate-500">
+            {manifestHealthy
+              ? "Er staan live routes klaar voor distributie."
+              : "Er zijn geen live routes beschikbaar."}
+          </p>
         </div>
 
         <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="text-sm text-slate-500">Verlopen</p>
-          <p className="text-3xl font-semibold">{expired.length}</p>
+          <p className="text-sm text-slate-500">Live</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-900">
+            {live.length}
+          </p>
         </div>
 
         <div className="rounded-2xl bg-white p-6 shadow-sm">
           <p className="text-sm text-slate-500">Concept</p>
-          <p className="text-3xl font-semibold">{concepts.length}</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-900">
+            {concepts.length}
+          </p>
+        </div>
+
+        <div className="rounded-2xl bg-white p-6 shadow-sm">
+          <p className="text-sm text-slate-500">Verlopen</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-900">
+            {expired.length}
+          </p>
+        </div>
+
+        <div className="rounded-2xl bg-white p-6 shadow-sm">
+          <p className="text-sm text-slate-500">Zonder upload</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-900">
+            {withoutUpload.length}
+          </p>
         </div>
 
         <div className="rounded-2xl bg-white p-6 shadow-sm">
           <p className="text-sm text-slate-500">Binnenkort live</p>
-          <p className="text-3xl font-semibold">{upcoming.length}</p>
-        </div>
-
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="text-sm text-slate-500">Wacht op akkoord</p>
-          <p className="text-3xl font-semibold">{pendingApprovals}</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-900">
+            {upcoming.length}
+          </p>
         </div>
       </section>
 
@@ -124,7 +146,9 @@ export default async function DashboardPage() {
             <div key={r.id} className="flex justify-between border-b pb-2">
               <div>
                 <p className="font-medium">{r.title}</p>
-                <p className="text-xs text-slate-500">{r.routeCode}</p>
+                <p className="text-xs text-slate-500">
+                  {r.routeCode} · {r.depot}
+                </p>
               </div>
 
               <Link
@@ -180,7 +204,9 @@ export default async function DashboardPage() {
             <div key={r.id} className="flex justify-between border-b pb-2">
               <div>
                 <p className="font-medium">{r.title}</p>
-                <p className="text-xs text-slate-500">{r.routeCode}</p>
+                <p className="text-xs text-slate-500">
+                  {r.routeCode} · {r.depot}
+                </p>
               </div>
 
               <Link
