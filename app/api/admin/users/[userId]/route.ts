@@ -7,7 +7,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ userId: string }> }
 ) {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   try {
     const { userId } = await params;
@@ -58,6 +58,7 @@ export async function PATCH(
         name: true,
         email: true,
         role: true,
+        isActive: true,
         createdAt: true,
       },
     });
@@ -70,6 +71,8 @@ export async function PATCH(
         name: updatedUser.name,
         email: updatedUser.email,
         role: updatedUser.role,
+        isActive: updatedUser.isActive,
+        performedBy: admin.email,
       },
     });
 
@@ -79,6 +82,71 @@ export async function PATCH(
 
     return NextResponse.json(
       { error: "Gebruiker bijwerken mislukt." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ userId: string }> }
+) {
+  const admin = await requireAdmin();
+
+  try {
+    const { userId } = await params;
+
+    if (admin.id === userId) {
+      return NextResponse.json(
+        { error: "Je kunt je eigen account niet verwijderen." },
+        { status: 400 }
+      );
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Gebruiker niet gevonden." },
+        { status: 404 }
+      );
+    }
+
+    await prisma.auditLog.updateMany({
+      where: { userId },
+      data: { userId: null },
+    });
+
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    await writeAuditLog({
+      action: "USER_DELETED",
+      entity: "user",
+      entityId: userId,
+      metadata: {
+        deletedName: user.name,
+        deletedEmail: user.email,
+        deletedRole: user.role,
+        performedBy: admin.email,
+      },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("DELETE USER ERROR:", error);
+
+    return NextResponse.json(
+      { error: "Gebruiker verwijderen mislukt." },
       { status: 500 }
     );
   }
