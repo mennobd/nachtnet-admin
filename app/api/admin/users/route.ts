@@ -30,7 +30,12 @@ export async function POST(request: Request) {
     const name = String(body.name ?? "").trim();
     const email = String(body.email ?? "").trim().toLowerCase();
     const password = String(body.password ?? "");
-    const role = body.role === "ADMIN" ? "ADMIN" : "EDITOR";
+    const role =
+        body.role === "ADMIN"
+          ? "ADMIN"
+          : body.role === "EDITOR"
+          ? "EDITOR"
+          : "VIEWER";
 
     if (!name || !email || !password) {
       return NextResponse.json(
