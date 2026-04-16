@@ -3,15 +3,6 @@ import { prisma } from "@/lib/db";
 
 export async function GET() {
   try {
-    const appBaseUrl = process.env.APP_BASE_URL;
-
-    if (!appBaseUrl) {
-      return NextResponse.json(
-        { error: "APP_BASE_URL ontbreekt in de environment variables." },
-        { status: 500 }
-      );
-    }
-
     const now = new Date();
 
     const entries = await prisma.manifestEntry.findMany({
@@ -40,44 +31,49 @@ export async function GET() {
       ],
     });
 
-    const bestPerRoute = new Map<string, (typeof entries)[number]>();
+    const uniqueRoutes = new Map<string, (typeof entries)[number]>();
 
     for (const entry of entries) {
-      if (!bestPerRoute.has(entry.routeId)) {
-        bestPerRoute.set(entry.routeId, entry);
+      if (!entry.route || !entry.file) {
+        continue;
+      }
+
+      if (!uniqueRoutes.has(entry.routeId)) {
+        uniqueRoutes.set(entry.routeId, entry);
       }
     }
 
-    const manifest = {
+    const routes = Array.from(uniqueRoutes.values()).map((entry) => {
+      const fileUrl = `${process.env.APP_BASE_URL}/routes/acties/${encodeURIComponent(
+        entry.file!.fileName
+      )}`;
+
+      return {
+        routeId: entry.route!.routeCode,
+        lineNumber: entry.route!.lineNumber,
+        title: entry.route!.title,
+        depot: entry.route!.depot,
+        packageName: "RET_NACHTNET",
+        type: "Regulier",
+        version: entry.version,
+        active: true,
+        fileName: entry.file!.fileName,
+        fileUrl,
+        checksum: entry.file!.checksum,
+      };
+    });
+
+    return NextResponse.json({
       version: "1.0.0",
-      generatedAt: now.toISOString(),
-      routes: Array.from(bestPerRoute.values())
-        .filter((entry) => entry.file?.storageKey)
-        .map((entry) => ({
-          routeId: entry.route.routeCode,
-          lineNumber: entry.route.lineNumber,
-          title: entry.route.title,
-          depot: entry.route.depot,
-          packageName: entry.packageName,
-          type: entry.type,
-          version: entry.version,
-          active: true,
-          fileName: entry.file.fileName,
-          fileUrl: `${appBaseUrl}/routes/acties/${encodeURIComponent(
-            entry.file.fileName
-          )}`,
-          checksum: entry.file.checksum,
-        })),
-    };
-      return NextResponse.json(manifest);
-    } catch (error) {
-    console.error("MANIFEST ERROR:", error);
-  
+      generatedAt: new Date().toISOString(),
+      routeCount: routes.length,
+      routes,
+    });
+  } catch (error) {
+    console.error("MANIFEST LIVE ERROR:", error);
+
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : "Onbekende fout bij genereren manifest",
-      },
+      { error: "Fout bij genereren manifest" },
       { status: 500 }
     );
   }
