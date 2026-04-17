@@ -48,11 +48,8 @@ export default async function DashboardLayout({
 
             <div>
               <h1 className="text-xl font-semibold text-slate-900">
-                Nachtnet Admin
+                RET Routebeheer
               </h1>
-              <p className="mt-2 text-sm text-slate-500">
-                {user.name} · {user.role}
-              </p>
             </div>
           </div>
 
