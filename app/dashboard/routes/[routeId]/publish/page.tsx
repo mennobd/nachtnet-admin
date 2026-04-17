@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import PublishManifestEntryForm from "@/components/PublishManifestEntryForm";
 import ReleaseValidationPanel from "@/components/ReleaseValidationPanel";
+import DeleteReleaseButton from "@/components/DeleteReleaseButton";
 
 function getPublicationState(entry: {
   isPublished: boolean;
@@ -78,6 +79,7 @@ export default async function PublishRoutePage({
         <div className="space-y-4">
           {route.manifestEntries.map((entry) => {
             const status = getPublicationState(entry);
+            const canDelete = !entry.isPublished;
 
             return (
               <section
@@ -107,6 +109,15 @@ export default async function PublishRoutePage({
                       </span>
                     </div>
                   </div>
+
+                  {canDelete ? (
+                    <DeleteReleaseButton
+                      entryId={entry.id}
+                      routeTitle={route.title}
+                      version={entry.version}
+                      fileName={entry.file?.fileName ?? "Onbekend bestand"}
+                    />
+                  ) : null}
                 </div>
 
                 <div className="mb-6">
