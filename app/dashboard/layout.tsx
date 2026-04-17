@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
+import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 
 export default async function DashboardLayout({
@@ -8,69 +10,80 @@ export default async function DashboardLayout({
 }) {
   const user = await requireUser();
 
+  async function getNavItems() {
+    const baseItems = [
+      { href: "/dashboard", label: "Dashboard" },
+      { href: "/dashboard/routes", label: "Routes" },
+      { href: "/dashboard/releases", label: "Releases" },
+      { href: "/dashboard/auditlog", label: "Auditlog" },
+    ];
+
+    if (user.role === "ADMIN") {
+      baseItems.push({
+        href: "/dashboard/admin/users",
+        label: "Gebruikers",
+      });
+    }
+
+    return baseItems;
+  }
+
+  const navItems = await getNavItems();
+
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-100 text-slate-900">
       <div className="flex min-h-screen">
-        <aside className="w-72 border-r border-slate-200 bg-white p-6">
-          <div className="mb-8">
-            <h1 className="text-xl font-semibold text-slate-900">
-              Nachtnet Admin
-            </h1>
-            <p className="mt-2 text-sm text-slate-500">
-              {user.name} · {user.role}
-            </p>
+        <aside className="w-72 border-r border-slate-200 bg-white">
+          <div className="border-b border-slate-200 px-6 py-6">
+            <div className="mb-4">
+              <Image
+                src="/bannerlogo.png"
+                alt="RET"
+                width={220}
+                height={70}
+                priority
+                className="h-auto w-auto max-w-full"
+              />
+            </div>
+
+            <div>
+              <h1 className="text-xl font-semibold text-slate-900">
+                Nachtnet Admin
+              </h1>
+              <p className="mt-2 text-sm text-slate-500">
+                {user.name} · {user.role}
+              </p>
+            </div>
           </div>
 
-          <nav className="space-y-2">
-            <Link
-              href="/dashboard"
-              className="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-            >
-              Dashboard
-            </Link>
-
-            <Link
-              href="/dashboard/routes"
-              className="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-            >
-              Routes
-            </Link>
-
-            <Link
-              href="/dashboard/releases"
-              className="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-            >
-              Releases
-            </Link>
-
-            <Link
-              href="/dashboard/auditlog"
-              className="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-            >
-              Auditlog
-            </Link>
-
-            {user.role === "ADMIN" ? (
-              <Link
-                href="/dashboard/admin/users"
-                className="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-              >
-                Gebruikers
-              </Link>
-            ) : null}
+          <nav className="px-4 py-6">
+            <ul className="space-y-1">
+              {navItems.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="block rounded-xl px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-900"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </nav>
 
-          <form action="/api/auth/logout" method="POST" className="mt-8">
-            <button
-              type="submit"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-            >
-              Uitloggen
-            </button>
-          </form>
+          <div className="px-4 pb-6">
+            <form action="/logout" method="POST">
+              <button
+                type="submit"
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+              >
+                Uitloggen
+              </button>
+            </form>
+          </div>
         </aside>
 
-        <main className="flex-1 p-8">{children}</main>
+        <main className="flex-1 p-6 md:p-8">{children}</main>
       </div>
     </div>
   );
