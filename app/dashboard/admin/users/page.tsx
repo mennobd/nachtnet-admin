@@ -71,7 +71,7 @@ export default async function UsersPage() {
                     <p className="font-medium text-slate-900">{user.name}</p>
                     <p className="text-sm text-slate-500">{user.email}</p>
                     <p className="mt-1 text-xs text-slate-500">
-                      Afdeling: {user.organization?.name ?? "Onbekend"}
+                      Afdeling: {user.organization?.name ?? "Geen afdeling"}
                     </p>
                     <p className="mt-1 text-xs text-slate-400">
                       Aangemaakt op{" "}
@@ -117,19 +117,29 @@ export default async function UsersPage() {
                   />
                 </div>
 
-                <EditUserForm
-                  userId={user.id}
-                  initialName={user.name}
-                  initialEmail={user.email}
-                  initialRole={user.role}
-                  initialOrganizationId={user.organizationId}
-                  organizations={organizations}
-                />
-
-                <ChangeUserPasswordForm
-                  userId={user.id}
-                  userName={user.name}
-                />
+                <details className="mt-4 rounded-xl border border-slate-200 bg-slate-50">
+                  <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-slate-700 [&::-webkit-details-marker]:hidden">
+                    Aanpassen…
+                  </summary>
+                
+                  <div className="border-t border-slate-200 p-4">
+                    <EditUserForm
+                      userId={user.id}
+                      initialName={user.name}
+                      initialEmail={user.email}
+                      initialRole={user.role}
+                      initialOrganizationId={user.organizationId}
+                      organizations={organizations}
+                    />
+                
+                    <div className="mt-4">
+                      <ChangeUserPasswordForm
+                        userId={user.id}
+                        userName={user.name}
+                      />
+                    </div>
+                  </div>
+                </details>
               </div>
             ))}
           </div>
