@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-type UserRole = "ADMIN" | "EDITOR" | "VIEWER";
+type UserRole = "ADMIN" | "ORG_ADMIN" | "EDITOR" | "VIEWER";
 
 type OrganizationOption = {
   id: string;
