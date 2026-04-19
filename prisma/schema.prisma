@@ -12,6 +12,12 @@ enum UserRole {
   VIEWER
 }
 
+enum RouteStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
 model Organization {
   id        String   @id @default(cuid())
   name      String   @unique
@@ -22,17 +28,17 @@ model Organization {
 }
 
 model User {
-  id             String        @id @default(cuid())
+  id             String       @id @default(cuid())
   name           String
-  email          String        @unique
+  email          String       @unique
   passwordHash   String
-  role           UserRole      @default(EDITOR)
-  isActive       Boolean       @default(true)
-  organizationId String
-  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  role           UserRole     @default(EDITOR)
+  isActive       Boolean      @default(true)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   auditLogs      AuditLog[]
 }
@@ -43,61 +49,63 @@ model AuditLog {
   entity    String
   entityId  String
   metadata  Json?
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
+
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
 }
 
 model Route {
-  id              String          @id @default(cuid())
-  routeCode       String          @unique
-  lineNumber      String
+  id              String         @id @default(cuid())
+  routeCode       String         @unique
   title           String
+  lineNumber      String
   direction       String
   depot           String
-  status          String          @default("Actief")
+  status          RouteStatus    @default(DRAFT)
   notes           String?
-
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
 
   files           RouteFile[]
   manifestEntries ManifestEntry[]
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 }
 
 model RouteFile {
   id              String          @id @default(cuid())
   routeId         String
-  route           Route           @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  route           Route           @relation(fields: [routeId], references: [id])
 
   fileName        String
-  storageKey      String
-  checksum        String?
-  version         String?
-
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  storageKey      String?
+  checksum        String
+  version         String
 
   manifestEntries ManifestEntry[]
+
+  createdAt       DateTime        @default(now())
 }
 
 model ManifestEntry {
-  id          String     @id @default(cuid())
-  routeId     String
-  fileId      String?
+  id            String    @id @default(cuid())
 
-  packageName String
-  type        String
-  version     String
-  isPublished Boolean    @default(false)
-  activeFrom  DateTime?
-  activeUntil DateTime?
-  priority    Int        @default(100)
-  notes       String?
+  routeId       String
+  route         Route     @relation(fields: [routeId], references: [id])
 
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  fileId        String
+  file          RouteFile @relation(fields: [fileId], references: [id])
 
-  route       Route      @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  file        RouteFile? @relation(fields: [fileId], references: [id], onDelete: SetNull)
+  packageName   String
+  type          String
+  version       String
+
+  isPublished   Boolean   @default(false)
+  activeFrom    DateTime?
+  activeUntil   DateTime?
+  priority      Int       @default(100)
+  notes         String?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
