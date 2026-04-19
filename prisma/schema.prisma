@@ -50,12 +50,14 @@ model AuditLog {
 
 model Route {
   id              String          @id @default(cuid())
-  routeCode       String
+  routeCode       String          @unique
   lineNumber      String
   title           String
   direction       String
   depot           String
+  status          String          @default("Actief")
   notes           String?
+
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
@@ -67,10 +69,12 @@ model RouteFile {
   id              String          @id @default(cuid())
   routeId         String
   route           Route           @relation(fields: [routeId], references: [id], onDelete: Cascade)
+
   fileName        String
   storageKey      String
   checksum        String?
   version         String?
+
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
@@ -81,6 +85,7 @@ model ManifestEntry {
   id          String     @id @default(cuid())
   routeId     String
   fileId      String?
+
   packageName String
   type        String
   version     String
@@ -89,6 +94,7 @@ model ManifestEntry {
   activeUntil DateTime?
   priority    Int        @default(100)
   notes       String?
+
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
