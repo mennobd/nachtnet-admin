@@ -19,11 +19,17 @@ export default async function DashboardLayout({
     ];
 
     if (user.role === "ADMIN") {
-      baseItems.push({
-        href: "/dashboard/admin/users",
-        label: "Gebruikers",
-      });
+  baseItems.push(
+    {
+      href: "/dashboard/admin/users",
+      label: "Gebruikers",
+    },
+    {
+      href: "/dashboard/admin/organizations",
+      label: "Afdelingen",
     }
+  );
+}
 
     return baseItems;
   }
