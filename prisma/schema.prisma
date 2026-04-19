@@ -67,6 +67,7 @@ model RouteFile {
   routeId         String
   route           Route           @relation(fields: [routeId], references: [id], onDelete: Cascade)
   fileName        String
+  storageKey      String
   checksum        String?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
