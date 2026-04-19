@@ -15,6 +15,8 @@ export async function PATCH(
 
     const name = String(body.name ?? "").trim();
     const email = String(body.email ?? "").trim().toLowerCase();
+    const organizationId = String(body.organizationId ?? "").trim();
+
     const role =
       body.role === "ADMIN"
         ? "ADMIN"
@@ -22,9 +24,21 @@ export async function PATCH(
         ? "EDITOR"
         : "VIEWER";
 
-    if (!name || !email) {
+    if (!name || !email || !organizationId) {
       return NextResponse.json(
-        { error: "Naam en e-mailadres zijn verplicht." },
+        { error: "Naam, e-mailadres en afdeling zijn verplicht." },
+        { status: 400 }
+      );
+    }
+
+    const organization = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { id: true, name: true },
+    });
+
+    if (!organization) {
+      return NextResponse.json(
+        { error: "Ongeldige afdeling geselecteerd." },
         { status: 400 }
       );
     }
@@ -52,6 +66,7 @@ export async function PATCH(
         name,
         email,
         role,
+        organizationId,
       },
       select: {
         id: true,
@@ -59,6 +74,13 @@ export async function PATCH(
         email: true,
         role: true,
         isActive: true,
+        organizationId: true,
+        organization: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         createdAt: true,
       },
     });
@@ -72,6 +94,8 @@ export async function PATCH(
         email: updatedUser.email,
         role: updatedUser.role,
         isActive: updatedUser.isActive,
+        organizationId: updatedUser.organizationId,
+        organizationName: updatedUser.organization?.name ?? null,
         performedBy: admin.email,
       },
     });
@@ -110,6 +134,12 @@ export async function DELETE(
         name: true,
         email: true,
         role: true,
+        organizationId: true,
+        organization: {
+          select: {
+            name: true,
+          },
+        },
       },
     });
 
@@ -137,6 +167,8 @@ export async function DELETE(
         deletedName: user.name,
         deletedEmail: user.email,
         deletedRole: user.role,
+        organizationId: user.organizationId,
+        organizationName: user.organization?.name ?? null,
         performedBy: admin.email,
       },
     });
