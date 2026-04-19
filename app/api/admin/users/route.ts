@@ -15,6 +15,13 @@ export async function GET() {
       email: true,
       role: true,
       isActive: true,
+      organizationId: true,
+      organization: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
       createdAt: true,
     },
   });
@@ -31,6 +38,8 @@ export async function POST(request: Request) {
     const name = String(body.name ?? "").trim();
     const email = String(body.email ?? "").trim().toLowerCase();
     const password = String(body.password ?? "");
+    const organizationId = String(body.organizationId ?? "").trim();
+
     const role =
       body.role === "ADMIN"
         ? "ADMIN"
@@ -38,9 +47,21 @@ export async function POST(request: Request) {
         ? "EDITOR"
         : "VIEWER";
 
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !organizationId) {
       return NextResponse.json(
-        { error: "Naam, e-mailadres en wachtwoord zijn verplicht." },
+        { error: "Naam, e-mailadres, wachtwoord en afdeling zijn verplicht." },
+        { status: 400 }
+      );
+    }
+
+    const organization = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { id: true, name: true },
+    });
+
+    if (!organization) {
+      return NextResponse.json(
+        { error: "Ongeldige afdeling geselecteerd." },
         { status: 400 }
       );
     }
@@ -66,6 +87,7 @@ export async function POST(request: Request) {
         passwordHash,
         role,
         isActive: true,
+        organizationId,
       },
       select: {
         id: true,
@@ -73,6 +95,13 @@ export async function POST(request: Request) {
         email: true,
         role: true,
         isActive: true,
+        organizationId: true,
+        organization: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         createdAt: true,
       },
     });
@@ -86,6 +115,8 @@ export async function POST(request: Request) {
         email: user.email,
         role: user.role,
         isActive: user.isActive,
+        organizationId: user.organizationId,
+        organizationName: user.organization?.name ?? null,
       },
     });
 
