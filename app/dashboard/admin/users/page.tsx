@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdminOrOrgAdmin } from "@/lib/auth";
 import CreateUserForm from "@/components/CreateUserForm";
 import EditUserForm from "@/components/EditUserForm";
 import ChangeUserPasswordForm from "@/components/ChangeUserPasswordForm";
@@ -7,10 +7,16 @@ import UserActivationButton from "@/components/UserActivationButton";
 import DeleteUserButton from "@/components/DeleteUserButton";
 
 export default async function UsersPage() {
-  await requireAdmin();
+  const currentUser = await requireAdminOrOrgAdmin();
+
+  const userWhere =
+    currentUser.role === "ADMIN"
+      ? {}
+      : { organizationId: currentUser.organizationId ?? "" };
 
   const [users, organizations] = await Promise.all([
     prisma.user.findMany({
+      where: userWhere,
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
@@ -28,13 +34,22 @@ export default async function UsersPage() {
         createdAt: true,
       },
     }),
-    prisma.organization.findMany({
-      orderBy: { name: "asc" },
-      select: {
-        id: true,
-        name: true,
-      },
-    }),
+    currentUser.role === "ADMIN"
+      ? prisma.organization.findMany({
+          orderBy: { name: "asc" },
+          select: {
+            id: true,
+            name: true,
+          },
+        })
+      : prisma.organization.findMany({
+          where: { id: currentUser.organizationId ?? "" },
+          orderBy: { name: "asc" },
+          select: {
+            id: true,
+            name: true,
+          },
+        }),
   ]);
 
   return (
@@ -113,17 +128,16 @@ export default async function UsersPage() {
                     isActive={user.isActive}
                   />
 
-                  <DeleteUserButton
-                    userId={user.id}
-                    userName={user.name}
-                  />
+                  {currentUser.role === "ADMIN" ? (
+                    <DeleteUserButton userId={user.id} userName={user.name} />
+                  ) : null}
                 </div>
 
                 <details className="mt-4 rounded-xl border border-slate-200 bg-slate-50">
                   <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-slate-700 [&::-webkit-details-marker]:hidden">
                     Aanpassen…
                   </summary>
-                
+
                   <div className="border-t border-slate-200 p-4">
                     <EditUserForm
                       userId={user.id}
@@ -132,8 +146,10 @@ export default async function UsersPage() {
                       initialRole={user.role}
                       initialOrganizationId={user.organizationId}
                       organizations={organizations}
+                      canEditRole={currentUser.role === "ADMIN"}
+                      canEditOrganization={currentUser.role === "ADMIN"}
                     />
-                
+
                     <div className="mt-4">
                       <ChangeUserPasswordForm
                         userId={user.id}
@@ -148,12 +164,14 @@ export default async function UsersPage() {
         )}
       </section>
 
-      <section className="rounded-2xl bg-white p-8 shadow-sm">
-        <h3 className="mb-4 text-lg font-semibold text-slate-900">
-          Nieuwe gebruiker aanmaken
-        </h3>
-        <CreateUserForm organizations={organizations} />
-      </section>
+      {currentUser.role === "ADMIN" ? (
+        <section className="rounded-2xl bg-white p-8 shadow-sm">
+          <h3 className="mb-4 text-lg font-semibold text-slate-900">
+            Nieuwe gebruiker aanmaken
+          </h3>
+          <CreateUserForm organizations={organizations} />
+        </section>
+      ) : null}
     </div>
   );
 }
