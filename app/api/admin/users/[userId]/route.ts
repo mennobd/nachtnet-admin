@@ -20,6 +20,8 @@ export async function PATCH(
     const role =
       body.role === "ADMIN"
         ? "ADMIN"
+        : body.role === "ORG_ADMIN"
+        ? "ORG_ADMIN"
         : body.role === "EDITOR"
         ? "EDITOR"
         : "VIEWER";
