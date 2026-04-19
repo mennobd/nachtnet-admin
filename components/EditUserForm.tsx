@@ -5,22 +5,32 @@ import { useState } from "react";
 
 type UserRole = "ADMIN" | "EDITOR" | "VIEWER";
 
+type OrganizationOption = {
+  id: string;
+  name: string;
+};
+
 export default function EditUserForm({
   userId,
   initialName,
   initialEmail,
   initialRole,
+  initialOrganizationId,
+  organizations,
 }: {
   userId: string;
   initialName: string;
   initialEmail: string;
   initialRole: UserRole;
+  initialOrganizationId: string;
+  organizations: OrganizationOption[];
 }) {
   const router = useRouter();
 
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
   const [role, setRole] = useState<UserRole>(initialRole);
+  const [organizationId, setOrganizationId] = useState(initialOrganizationId);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
@@ -41,6 +51,7 @@ export default function EditUserForm({
           name,
           email,
           role,
+          organizationId,
         }),
       });
 
@@ -66,7 +77,7 @@ export default function EditUserForm({
       onSubmit={handleSubmit}
       className="mt-4 space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4"
     >
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         <div>
           <label className="mb-2 block text-sm font-medium text-slate-700">
             Naam
@@ -75,8 +86,7 @@ export default function EditUserForm({
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-slate-500"
-            placeholder="Bijv. Menno Budding"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
             required
           />
         </div>
@@ -89,8 +99,7 @@ export default function EditUserForm({
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-slate-500"
-            placeholder="Bijv. naam@ret.nl"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
             required
           />
         </div>
@@ -107,6 +116,24 @@ export default function EditUserForm({
             <option value="VIEWER">VIEWER</option>
             <option value="EDITOR">EDITOR</option>
             <option value="ADMIN">ADMIN</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-medium text-slate-700">
+            Afdeling
+          </label>
+          <select
+            value={organizationId}
+            onChange={(e) => setOrganizationId(e.target.value)}
+            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+            required
+          >
+            {organizations.map((organization) => (
+              <option key={organization.id} value={organization.id}>
+                {organization.name}
+              </option>
+            ))}
           </select>
         </div>
       </div>
