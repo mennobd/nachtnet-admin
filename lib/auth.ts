@@ -8,7 +8,7 @@ export type SessionUser = {
   id: string;
   name: string;
   email: string;
-  role: "ADMIN" | "EDITOR" | "VIEWER";
+  role: "ADMIN" | "ORG_ADMIN" | "EDITOR" | "VIEWER";
   isActive: boolean;
 };
 
