@@ -84,6 +84,8 @@ export default async function UsersPage() {
                       className={`rounded-full px-3 py-1 text-xs font-medium ${
                         user.role === "ADMIN"
                           ? "bg-purple-100 text-purple-700"
+                          : user.role === "ORG_ADMIN"
+                          ? "bg-indigo-100 text-indigo-700"
                           : user.role === "EDITOR"
                           ? "bg-blue-100 text-blue-700"
                           : "bg-slate-200 text-slate-700"
