@@ -125,6 +125,7 @@ export default function CreateUserForm({
           >
             <option value="VIEWER">VIEWER</option>
             <option value="EDITOR">EDITOR</option>
+            <option value="ORG_ADMIN">ORG_ADMIN</option>
             <option value="ADMIN">ADMIN</option>
           </select>
         </div>
