@@ -10,6 +10,7 @@ export type SessionUser = {
   email: string;
   role: "ADMIN" | "ORG_ADMIN" | "EDITOR" | "VIEWER";
   isActive: boolean;
+  organizationId: string | null;
 };
 
 const SESSION_COOKIE_NAME = "session";
@@ -32,6 +33,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
       email: true,
       role: true,
       isActive: true,
+      organizationId: true,
     },
   });
 
@@ -62,10 +64,24 @@ export async function requireAdmin(): Promise<SessionUser> {
   return user;
 }
 
+export async function requireAdminOrOrgAdmin(): Promise<SessionUser> {
+  const user = await requireUser();
+
+  if (user.role !== "ADMIN" && user.role !== "ORG_ADMIN") {
+    redirect("/dashboard");
+  }
+
+  return user;
+}
+
 export async function requireEditor(): Promise<SessionUser> {
   const user = await requireUser();
 
-  if (user.role !== "ADMIN" && user.role !== "EDITOR") {
+  if (
+    user.role !== "ADMIN" &&
+    user.role !== "ORG_ADMIN" &&
+    user.role !== "EDITOR"
+  ) {
     redirect("/dashboard");
   }
 
