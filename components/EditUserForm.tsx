@@ -22,7 +22,7 @@ export default function EditUserForm({
   initialName: string;
   initialEmail: string;
   initialRole: UserRole;
-  initialOrganizationId: string;
+  initialOrganizationId: string | null;
   organizations: OrganizationOption[];
 }) {
   const router = useRouter();
@@ -30,7 +30,9 @@ export default function EditUserForm({
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
   const [role, setRole] = useState<UserRole>(initialRole);
-  const [organizationId, setOrganizationId] = useState(initialOrganizationId);
+  const [organizationId, setOrganizationId] = useState(
+    initialOrganizationId ?? organizations[0]?.id ?? ""
+  );
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
