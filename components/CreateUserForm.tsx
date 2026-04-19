@@ -3,13 +3,25 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function CreateUserForm() {
+type OrganizationOption = {
+  id: string;
+  name: string;
+};
+
+export default function CreateUserForm({
+  organizations,
+}: {
+  organizations: OrganizationOption[];
+}) {
   const router = useRouter();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("EDITOR");
+  const [role, setRole] = useState("VIEWER");
+  const [organizationId, setOrganizationId] = useState(
+    organizations[0]?.id ?? ""
+  );
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
@@ -31,6 +43,7 @@ export default function CreateUserForm() {
           email,
           password,
           role,
+          organizationId,
         }),
       });
 
@@ -42,101 +55,96 @@ export default function CreateUserForm() {
         return;
       }
 
-      setStatus("Gebruiker succesvol aangemaakt.");
+      setStatus("Gebruiker aangemaakt.");
       setName("");
       setEmail("");
       setPassword("");
-      setRole("EDITOR");
+      setRole("VIEWER");
+      setOrganizationId(organizations[0]?.id ?? "");
       setLoading(false);
-
       router.refresh();
     } catch {
-      setError("Er is een fout opgetreden tijdens het aanmaken.");
+      setError("Er is een fout opgetreden.");
       setLoading(false);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid gap-6 md:grid-cols-2">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <label
-            htmlFor="user-name"
-            className="mb-2 block text-sm font-medium text-slate-700"
-          >
+          <label className="mb-2 block text-sm font-medium text-slate-700">
             Naam
           </label>
           <input
-            id="user-name"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Bijv. Menno Budding"
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-slate-500"
+            placeholder="Bijv. Jan Jansen"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
             required
           />
         </div>
 
         <div>
-          <label
-            htmlFor="user-email"
-            className="mb-2 block text-sm font-medium text-slate-700"
-          >
+          <label className="mb-2 block text-sm font-medium text-slate-700">
             E-mailadres
           </label>
           <input
-            id="user-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Bijv. naam@ret.nl"
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-slate-500"
+            placeholder="naam@ret.nl"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
             required
           />
         </div>
 
         <div>
-          <label
-            htmlFor="user-password"
-            className="mb-2 block text-sm font-medium text-slate-700"
-          >
+          <label className="mb-2 block text-sm font-medium text-slate-700">
             Wachtwoord
           </label>
           <input
-            id="user-password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Kies een tijdelijk wachtwoord"
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-slate-500"
+            placeholder="Minimaal 8 tekens"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
             required
           />
-          <p className="mt-1 text-xs text-slate-500">
-            Gebruik voorlopig een tijdelijk wachtwoord dat later kan worden
-            vervangen.
-          </p>
         </div>
 
         <div>
-          <label
-            htmlFor="user-role"
-            className="mb-2 block text-sm font-medium text-slate-700"
-          >
+          <label className="mb-2 block text-sm font-medium text-slate-700">
             Rol
           </label>
           <select
-            id="user-role"
             value={role}
             onChange={(e) => setRole(e.target.value)}
             className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
           >
+            <option value="VIEWER">VIEWER</option>
             <option value="EDITOR">EDITOR</option>
             <option value="ADMIN">ADMIN</option>
-            <option value="VIEWER">VIEWER</option>
           </select>
-          <p className="mt-1 text-xs text-slate-500">
-            VIEWER kijkt alleen mee. EDITOR beheert routes en publicaties. ADMIN beheert ook gebruikers.
-          </p>
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="mb-2 block text-sm font-medium text-slate-700">
+            Afdeling
+          </label>
+          <select
+            value={organizationId}
+            onChange={(e) => setOrganizationId(e.target.value)}
+            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+            required
+          >
+            {organizations.map((organization) => (
+              <option key={organization.id} value={organization.id}>
+                {organization.name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -157,7 +165,7 @@ export default function CreateUserForm() {
         disabled={loading}
         className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
       >
-        {loading ? "Bezig met aanmaken..." : "Gebruiker aanmaken"}
+        {loading ? "Bezig..." : "Gebruiker aanmaken"}
       </button>
     </form>
   );
