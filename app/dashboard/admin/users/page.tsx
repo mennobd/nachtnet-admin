@@ -9,17 +9,33 @@ import DeleteUserButton from "@/components/DeleteUserButton";
 export default async function UsersPage() {
   await requireAdmin();
 
-  const users = await prisma.user.findMany({
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      isActive: true,
-      createdAt: true,
-    },
-  });
+  const [users, organizations] = await Promise.all([
+    prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+        organizationId: true,
+        organization: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        createdAt: true,
+      },
+    }),
+    prisma.organization.findMany({
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+      },
+    }),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -28,7 +44,7 @@ export default async function UsersPage() {
           Gebruikersbeheer
         </h2>
         <p className="mt-2 text-slate-600">
-          Beheer hier accounts, rollen, activatie en wachtwoorden.
+          Beheer hier accounts, rollen, afdelingen, activatie en wachtwoorden.
         </p>
       </section>
 
@@ -54,6 +70,9 @@ export default async function UsersPage() {
                   <div>
                     <p className="font-medium text-slate-900">{user.name}</p>
                     <p className="text-sm text-slate-500">{user.email}</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Afdeling: {user.organization?.name ?? "Onbekend"}
+                    </p>
                     <p className="mt-1 text-xs text-slate-400">
                       Aangemaakt op{" "}
                       {new Date(user.createdAt).toLocaleString("nl-NL")}
@@ -103,6 +122,8 @@ export default async function UsersPage() {
                   initialName={user.name}
                   initialEmail={user.email}
                   initialRole={user.role}
+                  initialOrganizationId={user.organizationId}
+                  organizations={organizations}
                 />
 
                 <ChangeUserPasswordForm
@@ -119,7 +140,7 @@ export default async function UsersPage() {
         <h3 className="mb-4 text-lg font-semibold text-slate-900">
           Nieuwe gebruiker aanmaken
         </h3>
-        <CreateUserForm />
+        <CreateUserForm organizations={organizations} />
       </section>
     </div>
   );
