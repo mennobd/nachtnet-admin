@@ -81,6 +81,8 @@ model ManifestEntry {
   id          String     @id @default(cuid())
   routeId     String
   fileId      String?
+  packageName String
+  type        String
   version     String
   isPublished Boolean    @default(false)
   activeFrom  DateTime?
