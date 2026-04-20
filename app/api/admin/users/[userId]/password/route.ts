@@ -1,14 +1,21 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 
-export async function POST(
+export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ userId: string }> }
 ) {
-  const admin = await requireAdmin();
+  const currentUser = await requireUser();
+
+  if (currentUser.role !== "ADMIN" && currentUser.role !== "ORG_ADMIN") {
+    return NextResponse.json(
+      { error: "Geen rechten om wachtwoorden te wijzigen." },
+      { status: 403 }
+    );
+  }
 
   try {
     const { userId } = await params;
@@ -21,6 +28,47 @@ export async function POST(
         { error: "Wachtwoord moet minimaal 8 tekens bevatten." },
         { status: 400 }
       );
+    }
+
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        organizationId: true,
+      },
+    });
+
+    if (!targetUser) {
+      return NextResponse.json(
+        { error: "Gebruiker niet gevonden." },
+        { status: 404 }
+      );
+    }
+
+    if (currentUser.role === "ORG_ADMIN") {
+      if (!currentUser.organizationId) {
+        return NextResponse.json(
+          { error: "Afdelingsadmin heeft geen gekoppelde afdeling." },
+          { status: 403 }
+        );
+      }
+
+      if (targetUser.organizationId !== currentUser.organizationId) {
+        return NextResponse.json(
+          { error: "Geen rechten om deze gebruiker te wijzigen." },
+          { status: 403 }
+        );
+      }
+
+      if (targetUser.role === "ADMIN") {
+        return NextResponse.json(
+          { error: "Een afdelingsadmin mag geen systeembeheerder wijzigen." },
+          { status: 403 }
+        );
+      }
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -43,7 +91,10 @@ export async function POST(
       entityId: user.id,
       metadata: {
         changedFor: user.email,
-        performedBy: admin.email,
+        targetName: targetUser.name,
+        targetRole: targetUser.role,
+        targetOrganizationId: targetUser.organizationId,
+        performedBy: currentUser.email,
       },
     });
 
@@ -52,7 +103,12 @@ export async function POST(
     console.error("CHANGE PASSWORD ERROR:", error);
 
     return NextResponse.json(
-      { error: "Wachtwoord wijzigen mislukt." },
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Wachtwoord wijzigen mislukt.",
+      },
       { status: 500 }
     );
   }
