@@ -2,8 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-type UserRole = "ADMIN" | "ORG_ADMIN" | "EDITOR" | "VIEWER";
+import type { UserRole } from "@prisma/client";
 
 type OrganizationOption = {
   id: string;
@@ -17,6 +16,8 @@ export default function EditUserForm({
   initialRole,
   initialOrganizationId,
   organizations,
+  canEditRole,
+  canEditOrganization,
 }: {
   userId: string;
   initialName: string;
@@ -24,6 +25,8 @@ export default function EditUserForm({
   initialRole: UserRole;
   initialOrganizationId: string | null;
   organizations: OrganizationOption[];
+  canEditRole: boolean;
+  canEditOrganization: boolean;
 }) {
   const router = useRouter();
 
@@ -60,7 +63,7 @@ export default function EditUserForm({
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Opslaan mislukt.");
+        setError(data.error || "Gebruiker bijwerken mislukt.");
         setLoading(false);
         return;
       }
@@ -77,7 +80,7 @@ export default function EditUserForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="mt-4 space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4"
+      className="space-y-4 rounded-xl border border-slate-200 bg-white p-4"
     >
       <div className="grid gap-4 md:grid-cols-2">
         <div>
@@ -110,34 +113,55 @@ export default function EditUserForm({
           <label className="mb-2 block text-sm font-medium text-slate-700">
             Rol
           </label>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value as UserRole)}
-            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
-          >
-            <option value="VIEWER">VIEWER</option>
-            <option value="EDITOR">EDITOR</option>
-            <option value="ORG_ADMIN">ORG_ADMIN</option>
-            <option value="ADMIN">ADMIN</option>
-          </select>
+          {canEditRole ? (
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as UserRole)}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+            >
+              <option value="VIEWER">VIEWER</option>
+              <option value="EDITOR">EDITOR</option>
+              <option value="ORG_ADMIN">ORG_ADMIN</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+          ) : (
+            <input
+              type="text"
+              value={role}
+              readOnly
+              className="w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-600"
+            />
+          )}
         </div>
 
         <div>
           <label className="mb-2 block text-sm font-medium text-slate-700">
             Afdeling
           </label>
-          <select
-            value={organizationId}
-            onChange={(e) => setOrganizationId(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
-            required
-          >
-            {organizations.map((organization) => (
-              <option key={organization.id} value={organization.id}>
-                {organization.name}
-              </option>
-            ))}
-          </select>
+          {canEditOrganization ? (
+            <select
+              value={organizationId}
+              onChange={(e) => setOrganizationId(e.target.value)}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+              required
+            >
+              {organizations.map((organization) => (
+                <option key={organization.id} value={organization.id}>
+                  {organization.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type="text"
+              value={
+                organizations.find((o) => o.id === organizationId)?.name ??
+                "Geen afdeling"
+              }
+              readOnly
+              className="w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-600"
+            />
+          )}
         </div>
       </div>
 
