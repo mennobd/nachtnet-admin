@@ -18,17 +18,18 @@ export default async function DashboardLayout({
       { href: "/dashboard/auditlog", label: "Auditlog" },
     ];
 
-    if (user.role === "ADMIN") {
-  baseItems.push(
-    {
-      href: "/dashboard/admin/users",
-      label: "Gebruikers",
-    },
-    {
-      href: "/dashboard/admin/organizations",
-      label: "Afdelingen",
-    }
-  );
+    if (user.role === "ADMIN" || user.role === "ORG_ADMIN") {
+  baseItems.push({
+    href: "/dashboard/admin/users",
+    label: "Gebruikers",
+  });
+}
+
+if (user.role === "ADMIN") {
+  baseItems.push({
+    href: "/dashboard/admin/organizations",
+    label: "Afdelingen",
+  });
 }
 
     return baseItems;
