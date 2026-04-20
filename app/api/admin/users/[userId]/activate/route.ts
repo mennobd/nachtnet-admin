@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 
-export async function PATCH(
+export async function POST(
   request: Request,
   { params }: { params: Promise<{ userId: string }> }
 ) {
@@ -11,15 +11,13 @@ export async function PATCH(
 
   if (currentUser.role !== "ADMIN" && currentUser.role !== "ORG_ADMIN") {
     return NextResponse.json(
-      { error: "Geen rechten om gebruikers te activeren of deactiveren." },
+      { error: "Geen rechten om gebruikers te activeren." },
       { status: 403 }
     );
   }
 
   try {
     const { userId } = await params;
-    const body = await request.json();
-    const isActive = Boolean(body.isActive);
 
     const targetUser = await prisma.user.findUnique({
       where: { id: userId },
@@ -40,6 +38,7 @@ export async function PATCH(
       );
     }
 
+    // ORG_ADMIN regels
     if (currentUser.role === "ORG_ADMIN") {
       if (!currentUser.organizationId) {
         return NextResponse.json(
@@ -65,7 +64,7 @@ export async function PATCH(
 
     const user = await prisma.user.update({
       where: { id: userId },
-      data: { isActive },
+      data: { isActive: true },
       select: {
         id: true,
         name: true,
@@ -76,7 +75,7 @@ export async function PATCH(
     });
 
     await writeAuditLog({
-      action: isActive ? "USER_ACTIVATED" : "USER_DEACTIVATED",
+      action: "USER_ACTIVATED",
       entity: "user",
       entityId: user.id,
       metadata: {
@@ -84,22 +83,17 @@ export async function PATCH(
         email: user.email,
         role: user.role,
         previousIsActive: targetUser.isActive,
-        newIsActive: user.isActive,
+        newIsActive: true,
         performedBy: currentUser.email,
       },
     });
 
     return NextResponse.json(user);
   } catch (error) {
-    console.error("ACTIVATE/DEACTIVATE USER ERROR:", error);
+    console.error("ACTIVATE USER ERROR:", error);
 
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Gebruikerstatus wijzigen mislukt.",
-      },
+      { error: "Gebruiker activeren mislukt." },
       { status: 500 }
     );
   }
