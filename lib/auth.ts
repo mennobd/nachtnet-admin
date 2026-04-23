@@ -11,6 +11,7 @@ export type SessionUser = {
   role: "ADMIN" | "ORG_ADMIN" | "EDITOR" | "VIEWER";
   isActive: boolean;
   organizationId: string | null;
+  organizationAccessIds: string[];
 };
 
 const SESSION_COOKIE_NAME = "session";
