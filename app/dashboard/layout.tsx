@@ -19,18 +19,24 @@ export default async function DashboardLayout({
     ];
 
     if (user.role === "ADMIN" || user.role === "ORG_ADMIN") {
-  baseItems.push({
-    href: "/dashboard/admin/users",
-    label: "Gebruikers",
-  });
-}
-
-if (user.role === "ADMIN") {
-  baseItems.push({
-    href: "/dashboard/admin/organizations",
-    label: "Afdelingen",
-  });
-}
+        baseItems.push(
+          {
+            href: "/dashboard/admin/users",
+            label: "Gebruikers",
+          },
+          {
+            href: "/dashboard/admin/organizations",
+            label: "Afdelingen",
+          }
+        );
+      }
+      
+      if (user.role === "ADMIN") {
+        baseItems.push({
+          href: "/dashboard/admin/access",
+          label: "Beheerrechten",
+        });
+      }
 
     return baseItems;
   }
