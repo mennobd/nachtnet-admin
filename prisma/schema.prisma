@@ -24,10 +24,10 @@ model Organization {
   name      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  users User[]
-  accesses UserOrganizationAccess[]
 
-  users     User[]
+  users     User[] @relation("PrimaryOrganizationUsers")
+
+  accesses  UserOrganizationAccess[]
 }
 
 model User {
@@ -37,17 +37,15 @@ model User {
   passwordHash   String
   role           UserRole     @default(EDITOR)
   isActive       Boolean      @default(true)
-  organizationId String?   // blijft voor primary
-  organization   Organization? @relation(fields: [organizationId], references: [id])
-  
-  organizationAccesses UserOrganizationAccess[]
 
+  organizationId String?
+  organization   Organization? @relation("PrimaryOrganizationUsers", fields: [organizationId], references: [id])
+
+  organizationAccesses UserOrganizationAccess[]
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
-
   auditLogs      AuditLog[]
 }
-
 model AuditLog {
   id        String   @id @default(cuid())
   action    String
@@ -119,11 +117,10 @@ model UserOrganizationAccess {
   id             String @id @default(cuid())
   userId         String
   organizationId String
-
-  user           User @relation(fields: [userId], references: [id])
-  organization   Organization @relation(fields: [organizationId], references: [id])
-
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdAt      DateTime @default(now())
-
   @@unique([userId, organizationId])
+  @@index([userId])
+  @@index([organizationId])
 }
