@@ -31,6 +31,16 @@ export default async function UsersPage() {
             name: true,
           },
         },
+        organizationAccesses: {
+          select: {
+            organization: {
+              select: {
+                id: true,
+                name: true,
+                },
+              },
+            },
+          },
         createdAt: true,
       },
     }),
@@ -87,6 +97,16 @@ export default async function UsersPage() {
                     <p className="text-sm text-slate-500">{user.email}</p>
                     <p className="mt-1 text-xs text-slate-500">
                       Afdeling: {user.organization?.name ?? "Geen afdeling"}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                       Extra beheer:{" "}
+                      {user.organizationAccesses.length === 0
+                        ? "Geen"
+                        : user.organizationAccesses.length > 3
+                        ? `${user.organizationAccesses.length} afdelingen`
+                        : user.organizationAccesses
+                            .map((item) => item.organization.name)
+                            .join(", ")}
                     </p>
                     <p className="mt-1 text-xs text-slate-400">
                       Aangemaakt op{" "}
