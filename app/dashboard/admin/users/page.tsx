@@ -12,7 +12,11 @@ export default async function UsersPage() {
   const userWhere =
     currentUser.role === "ADMIN"
       ? {}
-      : { organizationId: currentUser.organizationId ?? "" };
+      : {
+          organizationId: {
+            in: currentUser.organizationAccessIds,
+          },
+        };
 
   const [users, organizations] = await Promise.all([
     prisma.user.findMany({
@@ -37,10 +41,10 @@ export default async function UsersPage() {
               select: {
                 id: true,
                 name: true,
-                },
               },
             },
           },
+        },
         createdAt: true,
       },
     }),
@@ -53,7 +57,11 @@ export default async function UsersPage() {
           },
         })
       : prisma.organization.findMany({
-          where: { id: currentUser.organizationId ?? "" },
+          where: {
+            id: {
+              in: currentUser.organizationAccessIds,
+            },
+          },
           orderBy: { name: "asc" },
           select: {
             id: true,
@@ -99,7 +107,7 @@ export default async function UsersPage() {
                       Afdeling: {user.organization?.name ?? "Geen afdeling"}
                     </p>
                     <p className="mt-1 text-xs text-slate-500">
-                       Extra beheer:{" "}
+                      Extra beheer:{" "}
                       {user.organizationAccesses.length === 0
                         ? "Geen"
                         : user.organizationAccesses.length > 3
