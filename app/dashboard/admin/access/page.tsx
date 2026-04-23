@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import ManageOrgAccessForm from "@/components/ManageOrgAccessForm";
 
 export default async function AccessPage() {
   await requireAdmin();
@@ -113,62 +114,15 @@ export default async function AccessPage() {
                   </summary>
 
                   <div className="border-t border-slate-200 p-4">
-                    <div className="space-y-3">
-                      {organizations.map((organization) => {
-                        const hasAccess = user.organizationAccesses.some(
-                          (access) =>
-                            access.organizationId === organization.id
-                        );
-
-                        return (
-                          <form
-                            key={organization.id}
-                            action={`/api/admin/user-access`}
-                            method="POST"
-                            className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 px-4 py-3"
-                          >
-                            <div>
-                              <p className="text-sm font-medium text-slate-900">
-                                {organization.name}
-                              </p>
-                              <p className="text-xs text-slate-500">
-                                {hasAccess
-                                  ? "Extra beheer actief"
-                                  : "Nog niet gekoppeld"}
-                              </p>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="hidden"
-                                name="userId"
-                                value={user.id}
-                              />
-                              <input
-                                type="hidden"
-                                name="organizationId"
-                                value={organization.id}
-                              />
-
-                              {hasAccess ? (
-                                <AccessRemoveButton
-                                  userId={user.id}
-                                  organizationId={organization.id}
-                                />
-                              ) : (
-                                <button
-                                  type="submit"
-                                  formAction="/api/admin/user-access"
-                                  className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-                                >
-                                  Koppelen
-                                </button>
-                              )}
-                            </div>
-                          </form>
-                        );
-                      })}
-                    </div>
+                    <ManageOrgAccessForm
+                      userId={user.id}
+                      organizations={organizations}
+                      currentAccesses={user.organizationAccesses.map(
+                        (access) => ({
+                          organizationId: access.organizationId,
+                        })
+                      )}
+                    />
                   </div>
                 </details>
               </div>
@@ -177,43 +131,5 @@ export default async function AccessPage() {
         )}
       </section>
     </div>
-  );
-}
-
-function AccessRemoveButton({
-  userId,
-  organizationId,
-}: {
-  userId: string;
-  organizationId: string;
-}) {
-  return (
-    <form
-      action="/api/admin/user-access"
-      method="POST"
-      onSubmit={(event) => {
-        event.preventDefault();
-
-        fetch("/api/admin/user-access", {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId,
-            organizationId,
-          }),
-        }).then(() => {
-          window.location.reload();
-        });
-      }}
-    >
-      <button
-        type="submit"
-        className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
-      >
-        Ontkoppelen
-      </button>
-    </form>
   );
 }
