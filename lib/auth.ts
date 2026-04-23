@@ -47,7 +47,22 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     return null;
   }
 
-  return user;
+  const accessIds = Array.from(
+    new Set([
+      ...(user.organizationId ? [user.organizationId] : []),
+      ...user.organizationAccesses.map((item) => item.organizationId),
+    ])
+  );
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    isActive: user.isActive,
+    organizationId: user.organizationId,
+    organizationAccessIds: accessIds,
+  };
 }
 
 export async function requireUser(): Promise<SessionUser> {
@@ -113,16 +128,6 @@ export async function getRequiredMutationUser(): Promise<SessionUser | null> {
 
   if (user.role === "VIEWER") {
     return null;
-  }
-
-  return user;
-}
-
-export async function requireAdminOrOrgAdmin(): Promise<SessionUser> {
-  const user = await requireUser();
-
-  if (user.role !== "ADMIN" && user.role !== "ORG_ADMIN") {
-    redirect("/dashboard");
   }
 
   return user;
