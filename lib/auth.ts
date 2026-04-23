@@ -35,6 +35,11 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
       role: true,
       isActive: true,
       organizationId: true,
+      organizationAccesses: {
+        select: {
+          organizationId: true,
+        },
+      },
     },
   });
 
