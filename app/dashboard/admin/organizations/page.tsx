@@ -1,23 +1,44 @@
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdminOrOrgAdmin } from "@/lib/auth";
 import CreateOrganizationForm from "@/components/CreateOrganizationForm";
 import EditOrganizationForm from "@/components/EditOrganizationForm";
 import DeleteOrganizationButton from "@/components/DeleteOrganizationButton";
 
 export default async function OrganizationsPage() {
-  await requireAdmin();
+  const currentUser = await requireAdminOrOrgAdmin();
 
   const organizations = await prisma.organization.findMany({
+    where:
+      currentUser.role === "ADMIN"
+        ? {}
+        : {
+            id: {
+              in: currentUser.organizationAccessIds,
+            },
+          },
     orderBy: { name: "asc" },
-    include: {
+    select: {
+      id: true,
+      name: true,
       _count: {
         select: {
           users: true,
+          accesses: true,
+        },
+      },
+      accesses: {
+        select: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
         },
       },
     },
   });
-
   return (
     <div className="space-y-6">
       <section className="rounded-2xl bg-white p-8 shadow-sm">
@@ -50,31 +71,57 @@ export default async function OrganizationsPage() {
                     <p className="text-sm text-slate-500">
                       {organization._count.users} gebruiker(s)
                     </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {organization._count.accesses} ORG_ADMIN(s)
+                    </p>
+                  
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {organization.accesses.length === 0 ? (
+                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-500">
+                          Geen ORG_ADMIN gekoppeld
+                        </span>
+                      ) : (
+                        organization.accesses.map((access) => (
+                          <span
+                            key={access.user.id}
+                            className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-700"
+                          >
+                            {access.user.name}
+                          </span>
+                        ))
+                      )}
+                    </div>
                   </div>
 
-                  <DeleteOrganizationButton
-                    organizationId={organization.id}
-                    organizationName={organization.name}
-                  />
+                  {currentUser.role === "ADMIN" ? (
+                    <DeleteOrganizationButton
+                      organizationId={organization.id}
+                      organizationName={organization.name}
+                    />
+                  ) : null}
                 </div>
 
-                <EditOrganizationForm
-                  organizationId={organization.id}
-                  initialName={organization.name}
-                />
+                {currentUser.role === "ADMIN" ? (
+                  <EditOrganizationForm
+                    organizationId={organization.id}
+                    initialName={organization.name}
+                  />
+                ) : null}
               </div>
             ))}
           </div>
         )}
       </section>
 
-      <section className="rounded-2xl bg-white p-8 shadow-sm">
-        <h3 className="mb-4 text-lg font-semibold text-slate-900">
-          Nieuwe afdeling aanmaken
-        </h3>
-
-        <CreateOrganizationForm />
-      </section>
+      {currentUser.role === "ADMIN" ? (
+        <section className="rounded-2xl bg-white p-8 shadow-sm">
+          <h3 className="mb-4 text-lg font-semibold text-slate-900">
+            Nieuwe afdeling aanmaken
+          </h3>
+      
+          <CreateOrganizationForm />
+        </section>
+      ) : null}
     </div>
   );
 }
