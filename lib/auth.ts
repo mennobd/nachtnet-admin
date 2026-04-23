@@ -117,3 +117,13 @@ export async function getRequiredMutationUser(): Promise<SessionUser | null> {
 
   return user;
 }
+
+export async function requireAdminOrOrgAdmin(): Promise<SessionUser> {
+  const user = await requireUser();
+
+  if (user.role !== "ADMIN" && user.role !== "ORG_ADMIN") {
+    redirect("/dashboard");
+  }
+
+  return user;
+}
