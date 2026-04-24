@@ -257,6 +257,14 @@ export default async function RoutesPage({
                       {route.publicationState}
                     </span>
 
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${getCategoryBadge(
+                        route.category
+                      )}`}
+                    >
+                      {route.category}
+                    </span>
+
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
                       {route.status}
                     </span>
