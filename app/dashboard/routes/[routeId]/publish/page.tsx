@@ -175,7 +175,6 @@ export default async function PublishRoutePage({
                       ? new Date(entry.activeUntil).toISOString().slice(0, 16)
                       : ""
                   }
-                  initialPriority={entry.priority}
                   initialNotes={entry.notes ?? ""}
                 />
               </section>
