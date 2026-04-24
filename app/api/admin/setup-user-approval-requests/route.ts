@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 
-export async function POST() {
+async function runSetup() {
   await requireAdmin();
 
   try {
@@ -34,24 +34,36 @@ export async function POST() {
     `);
 
     await prisma.$executeRawUnsafe(`
-      ALTER TABLE "UserApprovalRequest"
-      ADD CONSTRAINT IF NOT EXISTS "UserApprovalRequest_organizationId_fkey"
-      FOREIGN KEY ("organizationId") REFERENCES "Organization"("id")
-      ON DELETE RESTRICT ON UPDATE CASCADE;
+      DO $$ BEGIN
+        ALTER TABLE "UserApprovalRequest"
+        ADD CONSTRAINT "UserApprovalRequest_organizationId_fkey"
+        FOREIGN KEY ("organizationId") REFERENCES "Organization"("id")
+        ON DELETE RESTRICT ON UPDATE CASCADE;
+      EXCEPTION
+        WHEN duplicate_object THEN null;
+      END $$;
     `);
 
     await prisma.$executeRawUnsafe(`
-      ALTER TABLE "UserApprovalRequest"
-      ADD CONSTRAINT IF NOT EXISTS "UserApprovalRequest_requestedById_fkey"
-      FOREIGN KEY ("requestedById") REFERENCES "User"("id")
-      ON DELETE RESTRICT ON UPDATE CASCADE;
+      DO $$ BEGIN
+        ALTER TABLE "UserApprovalRequest"
+        ADD CONSTRAINT "UserApprovalRequest_requestedById_fkey"
+        FOREIGN KEY ("requestedById") REFERENCES "User"("id")
+        ON DELETE RESTRICT ON UPDATE CASCADE;
+      EXCEPTION
+        WHEN duplicate_object THEN null;
+      END $$;
     `);
 
     await prisma.$executeRawUnsafe(`
-      ALTER TABLE "UserApprovalRequest"
-      ADD CONSTRAINT IF NOT EXISTS "UserApprovalRequest_reviewedById_fkey"
-      FOREIGN KEY ("reviewedById") REFERENCES "User"("id")
-      ON DELETE SET NULL ON UPDATE CASCADE;
+      DO $$ BEGIN
+        ALTER TABLE "UserApprovalRequest"
+        ADD CONSTRAINT "UserApprovalRequest_reviewedById_fkey"
+        FOREIGN KEY ("reviewedById") REFERENCES "User"("id")
+        ON DELETE SET NULL ON UPDATE CASCADE;
+      EXCEPTION
+        WHEN duplicate_object THEN null;
+      END $$;
     `);
 
     await prisma.$executeRawUnsafe(`
@@ -85,6 +97,10 @@ export async function POST() {
   }
 }
 
+export async function POST() {
+  return runSetup();
+}
+
 export async function GET() {
-  return POST();
+  return runSetup();
 }
