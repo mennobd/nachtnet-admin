@@ -1,21 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireUser } from "@/lib/auth";
+import { requireAdminOrOrgAdmin } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
-import type { UserRole } from "@prisma/client";
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ userId: string }> }
 ) {
-  const currentUser = await requireUser();
-
-  if (currentUser.role !== "ADMIN" && currentUser.role !== "ORG_ADMIN") {
-    return NextResponse.json(
-      { error: "Geen rechten om gebruikers te wijzigen." },
-      { status: 403 }
-    );
-  }
+  const currentUser = await requireAdminOrOrgAdmin();
 
   try {
     const { userId } = await params;
@@ -23,9 +15,9 @@ export async function PATCH(
 
     const name = String(body.name ?? "").trim();
     const email = String(body.email ?? "").trim().toLowerCase();
-    const requestedOrganizationId = String(body.organizationId ?? "").trim();
+    const organizationId = String(body.organizationId ?? "").trim();
 
-    const requestedRole: UserRole =
+    const role =
       body.role === "ADMIN"
         ? "ADMIN"
         : body.role === "ORG_ADMIN"
@@ -34,9 +26,9 @@ export async function PATCH(
         ? "EDITOR"
         : "VIEWER";
 
-    if (!name || !email) {
+    if (!name || !email || !organizationId) {
       return NextResponse.json(
-        { error: "Naam en e-mailadres zijn verplicht." },
+        { error: "Naam, e-mailadres en afdeling zijn verplicht." },
         { status: 400 }
       );
     }
@@ -67,14 +59,10 @@ export async function PATCH(
     }
 
     if (currentUser.role === "ORG_ADMIN") {
-      if (!currentUser.organizationId) {
-        return NextResponse.json(
-          { error: "Afdelingsadmin heeft geen gekoppelde afdeling." },
-          { status: 403 }
-        );
-      }
-
-      if (targetUser.organizationId !== currentUser.organizationId) {
+      if (
+        !targetUser.organizationId ||
+        !currentUser.organizationAccessIds.includes(targetUser.organizationId)
+      ) {
         return NextResponse.json(
           { error: "Geen rechten om deze gebruiker te wijzigen." },
           { status: 403 }
@@ -87,6 +75,32 @@ export async function PATCH(
           { status: 403 }
         );
       }
+
+      if (organizationId !== targetUser.organizationId) {
+        return NextResponse.json(
+          { error: "Een afdelingsadmin mag de primaire afdeling niet wijzigen." },
+          { status: 403 }
+        );
+      }
+
+      if (role !== targetUser.role) {
+        return NextResponse.json(
+          { error: "Een afdelingsadmin mag de rol niet wijzigen." },
+          { status: 403 }
+        );
+      }
+    }
+
+    const organization = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { id: true, name: true },
+    });
+
+    if (!organization) {
+      return NextResponse.json(
+        { error: "Ongeldige afdeling geselecteerd." },
+        { status: 400 }
+      );
     }
 
     const existingUser = await prisma.user.findFirst({
@@ -106,40 +120,13 @@ export async function PATCH(
       );
     }
 
-    let roleToUpdate: UserRole = targetUser.role;
-    let organizationIdToUpdate: string | null = targetUser.organizationId;
-
-    if (currentUser.role === "ADMIN") {
-      if (!requestedOrganizationId) {
-        return NextResponse.json(
-          { error: "Afdeling is verplicht." },
-          { status: 400 }
-        );
-      }
-
-      const organization = await prisma.organization.findUnique({
-        where: { id: requestedOrganizationId },
-        select: { id: true, name: true },
-      });
-
-      if (!organization) {
-        return NextResponse.json(
-          { error: "Ongeldige afdeling geselecteerd." },
-          { status: 400 }
-        );
-      }
-
-      roleToUpdate = requestedRole;
-      organizationIdToUpdate = requestedOrganizationId;
-    }
-
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
         name,
         email,
-        role: roleToUpdate,
-        organizationId: organizationIdToUpdate,
+        role,
+        organizationId,
       },
       select: {
         id: true,
@@ -163,18 +150,12 @@ export async function PATCH(
       entity: "user",
       entityId: updatedUser.id,
       metadata: {
-        previousName: targetUser.name,
-        newName: updatedUser.name,
-        previousEmail: targetUser.email,
-        newEmail: updatedUser.email,
-        previousRole: targetUser.role,
-        newRole: updatedUser.role,
-        previousIsActive: targetUser.isActive,
-        newIsActive: updatedUser.isActive,
-        previousOrganizationId: targetUser.organizationId,
-        newOrganizationId: updatedUser.organizationId,
-        previousOrganizationName: targetUser.organization?.name ?? null,
-        newOrganizationName: updatedUser.organization?.name ?? null,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        isActive: updatedUser.isActive,
+        organizationId: updatedUser.organizationId,
+        organizationName: updatedUser.organization?.name ?? null,
         performedBy: currentUser.email,
       },
     });
@@ -184,12 +165,7 @@ export async function PATCH(
     console.error("UPDATE USER ERROR:", error);
 
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Gebruiker bijwerken mislukt.",
-      },
+      { error: "Gebruiker bijwerken mislukt." },
       { status: 500 }
     );
   }
@@ -199,14 +175,7 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ userId: string }> }
 ) {
-  const currentUser = await requireUser();
-
-  if (currentUser.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Alleen een ADMIN mag gebruikers verwijderen." },
-      { status: 403 }
-    );
-  }
+  const currentUser = await requireAdminOrOrgAdmin();
 
   try {
     const { userId } = await params;
@@ -218,7 +187,7 @@ export async function DELETE(
       );
     }
 
-    const user = await prisma.user.findUnique({
+    const targetUser = await prisma.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
@@ -234,10 +203,17 @@ export async function DELETE(
       },
     });
 
-    if (!user) {
+    if (!targetUser) {
       return NextResponse.json(
         { error: "Gebruiker niet gevonden." },
         { status: 404 }
+      );
+    }
+
+    if (currentUser.role !== "ADMIN") {
+      return NextResponse.json(
+        { error: "Alleen ADMIN mag gebruikers verwijderen." },
+        { status: 403 }
       );
     }
 
@@ -255,11 +231,11 @@ export async function DELETE(
       entity: "user",
       entityId: userId,
       metadata: {
-        deletedName: user.name,
-        deletedEmail: user.email,
-        deletedRole: user.role,
-        organizationId: user.organizationId,
-        organizationName: user.organization?.name ?? null,
+        deletedName: targetUser.name,
+        deletedEmail: targetUser.email,
+        deletedRole: targetUser.role,
+        organizationId: targetUser.organizationId,
+        organizationName: targetUser.organization?.name ?? null,
         performedBy: currentUser.email,
       },
     });
@@ -269,12 +245,7 @@ export async function DELETE(
     console.error("DELETE USER ERROR:", error);
 
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Gebruiker verwijderen mislukt.",
-      },
+      { error: "Gebruiker verwijderen mislukt." },
       { status: 500 }
     );
   }
