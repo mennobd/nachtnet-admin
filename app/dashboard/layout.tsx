@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { requireUser } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 
 export default async function DashboardLayout({
   children,
@@ -10,32 +11,44 @@ export default async function DashboardLayout({
   const user = await requireUser();
 
   async function getNavItems() {
+    const pendingRequestCount =
+      user.role === "ADMIN"
+        ? await prisma.userApprovalRequest.count({
+            where: {
+              status: "PENDING",
+            },
+          })
+        : 0;
+  
     const baseItems = [
       { href: "/dashboard", label: "Dashboard" },
       { href: "/dashboard/routes", label: "Routes" },
       { href: "/dashboard/releases", label: "Releases" },
       { href: "/dashboard/auditlog", label: "Auditlog" },
     ];
-
+  
     if (user.role === "ADMIN" || user.role === "ORG_ADMIN") {
       baseItems.push({
         href: "/dashboard/admin/users",
         label: "Gebruikers",
       });
     }
-
+  
     if (user.role === "ORG_ADMIN") {
       baseItems.push({
         href: "/dashboard/org-admin/requests",
         label: "Gebruiker aanvragen",
       });
     }
-
+  
     if (user.role === "ADMIN") {
       baseItems.push(
         {
           href: "/dashboard/admin/user-requests",
-          label: "Aanvragen",
+          label:
+            pendingRequestCount > 0
+              ? `Aanvragen (${pendingRequestCount})`
+              : "Aanvragen",
         },
         {
           href: "/dashboard/admin/organizations",
@@ -48,8 +61,8 @@ export default async function DashboardLayout({
       );
     }
 
-    return baseItems;
-  }
+  return baseItems;
+}
 
   const navItems = await getNavItems();
 
