@@ -2,7 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { getInvalidConceptReleases } from "@/lib/dashboard-health";
-import { getRoleLabel } from "@/lib/roles";
+import { getRoleMeta } from "@/lib/roles";
 
 function getPublicationState(entry: {
   isPublished: boolean;
@@ -72,7 +72,7 @@ export default async function DashboardPage() {
               Overzicht van routes, publicaties en operationele aandachtspunten.
             </p>
             <p className="mt-2 text-sm text-slate-500">
-              Ingelogd als {user.name} · {getRoleLabel(user.role)}
+              Ingelogd als {user.name} · {getRoleMeta(user.role).label}
             </p>
           </div>
 
