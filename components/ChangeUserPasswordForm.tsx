@@ -22,7 +22,7 @@ export default function ChangeUserPasswordForm({
 
     try {
       const response = await fetch(`/api/admin/users/${userId}/password`, {
-        method: "POST",
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
