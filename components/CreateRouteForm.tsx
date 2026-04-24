@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+type RouteCategory = "REGULIER" | "OMLEIDING" | "CALAMITEIT";
+
 type FormState = {
   routeCode: string;
   title: string;
@@ -10,6 +12,7 @@ type FormState = {
   direction: string;
   depot: string;
   notes: string;
+  category: RouteCategory;
 };
 
 const initialState: FormState = {
@@ -19,6 +22,7 @@ const initialState: FormState = {
   direction: "",
   depot: "",
   notes: "",
+  category: "REGULIER",
 };
 
 export default function CreateRouteForm() {
@@ -182,6 +186,31 @@ export default function CreateRouteForm() {
             Kies altijd uit de vaste vestigingen voor consistente filtering.
           </p>
         </div>
+
+        <div>
+          <label
+            htmlFor="category"
+            className="mb-2 block text-sm font-medium text-slate-700"
+          >
+              Routecategorie
+                </label>
+                  <select
+                    id="category"
+                    value={form.category}
+                    onChange={(e) =>
+                      updateField("category", e.target.value as RouteCategory)
+                    }
+                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+                    required
+                  >
+                    <option value="REGULIER">Regulier</option>
+                    <option value="OMLEIDING">Omleiding</option>
+                    <option value="CALAMITEIT">Calamiteit</option>
+                  </select>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Gebruik Omleiding of Calamiteit alleen wanneer deze route afwijkt van de standaardroute.
+                  </p>
+                </div>
 
         <div className="md:col-span-2">
           <label
