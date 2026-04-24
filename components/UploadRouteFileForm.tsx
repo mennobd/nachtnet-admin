@@ -11,6 +11,9 @@ export default function UploadRouteFileForm({
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [category, setCategory] = useState<RouteCategory>("REGULIER");
+  const [publishNow, setPublishNow] = useState(false);
+  const [activeFrom, setActiveFrom] = useState("");
+  const [activeUntil, setActiveUntil] = useState("");
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -33,6 +36,9 @@ export default function UploadRouteFileForm({
       formData.append("routeId", routeId);
       formData.append("file", file);
       formData.append("category", category);
+      formData.append("publishNow", String(publishNow));
+      formData.append("activeFrom", activeFrom);
+      formData.append("activeUntil", activeUntil);
 
       const response = await fetch("/api/routes/upload", {
         method: "POST",
@@ -58,10 +64,16 @@ export default function UploadRouteFileForm({
       }
 
       setStatus(
-        `Upload gelukt. Bestand: ${data.fileName}, versie: ${data.version}`
+        publishNow
+          ? `Upload gelukt en live gezet. Bestand: ${data.fileName}, versie: ${data.version}`
+          : `Upload gelukt. Bestand: ${data.fileName}, versie: ${data.version}`
       );
+
       setFile(null);
       setCategory("REGULIER");
+      setPublishNow(false);
+      setActiveFrom("");
+      setActiveUntil("");
       setLoading(false);
 
       const fileInput = document.getElementById(
@@ -101,6 +113,60 @@ export default function UploadRouteFileForm({
         <p className="mt-1 text-xs text-slate-500">
           Kies de categorie die hoort bij deze nieuwe versie van de route.
         </p>
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <label className="flex items-center gap-3 text-sm font-medium text-slate-700">
+          <input
+            type="checkbox"
+            checked={publishNow}
+            onChange={(e) => setPublishNow(e.target.checked)}
+            className="h-4 w-4"
+          />
+          Deze upload meteen live zetten
+        </label>
+
+        {publishNow ? (
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div>
+              <label
+                htmlFor="activeFrom"
+                className="mb-2 block text-sm font-medium text-slate-700"
+              >
+                Actief vanaf
+              </label>
+              <input
+                id="activeFrom"
+                type="datetime-local"
+                value={activeFrom}
+                onChange={(e) => setActiveFrom(e.target.value)}
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+              />
+              <p className="mt-1 text-xs text-slate-500">
+                Leeg laten betekent direct actief.
+              </p>
+            </div>
+
+            <div>
+              <label
+                htmlFor="activeUntil"
+                className="mb-2 block text-sm font-medium text-slate-700"
+              >
+                Actief tot
+              </label>
+              <input
+                id="activeUntil"
+                type="datetime-local"
+                value={activeUntil}
+                onChange={(e) => setActiveUntil(e.target.value)}
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+              />
+              <p className="mt-1 text-xs text-slate-500">
+                Leeg laten betekent geen einddatum.
+              </p>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div>
