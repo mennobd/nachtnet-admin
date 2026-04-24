@@ -67,14 +67,14 @@ export default function ManageOrgAccessForm({
         return (
           <div
             key={organization.id}
-            className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 px-4 py-3"
+            className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-4 py-3"
           >
             <div>
               <p className="text-sm font-medium text-slate-900">
                 {organization.name}
               </p>
-              <p className="text-xs text-slate-500">
-                {hasAccess ? "Extra beheer actief" : "Nog niet gekoppeld"}
+              <p className="mt-1 text-xs text-slate-500">
+                {hasAccess ? "Gekoppeld aan deze ORG_ADMIN" : "Niet gekoppeld"}
               </p>
             </div>
 
@@ -82,9 +82,9 @@ export default function ManageOrgAccessForm({
               type="button"
               onClick={() => toggleAccess(organization.id, hasAccess)}
               disabled={loadingId === organization.id}
-              className={`rounded-xl px-4 py-2 text-sm font-medium ${
+              className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
                 hasAccess
-                  ? "border border-slate-300 text-slate-700 hover:bg-slate-100"
+                  ? "border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
                   : "bg-slate-900 text-white hover:bg-slate-800"
               } disabled:opacity-60`}
             >
