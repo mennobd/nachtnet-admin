@@ -158,6 +158,20 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: true });
     }
 
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        organizationId: true,
+      },
+    });
+    
+    if (targetUser?.organizationId === organizationId) {
+      return NextResponse.json(
+        { error: "De primaire afdeling van een ORG_ADMIN kan hier niet worden ontkoppeld." },
+        { status: 400 }
+      );
+    }
+
     await prisma.userOrganizationAccess.delete({
       where: {
         userId_organizationId: {
