@@ -38,30 +38,24 @@ export async function POST(
       );
     }
 
-    // ORG_ADMIN regels
-    if (currentUser.role === "ORG_ADMIN") {
-      if (!currentUser.organizationId) {
-        return NextResponse.json(
-          { error: "Afdelingsadmin heeft geen gekoppelde afdeling." },
-          { status: 403 }
-        );
-      }
-
-      if (targetUser.organizationId !== currentUser.organizationId) {
-        return NextResponse.json(
-          { error: "Geen rechten om deze gebruiker te wijzigen." },
-          { status: 403 }
-        );
-      }
-
-      if (targetUser.role === "ADMIN") {
-        return NextResponse.json(
-          { error: "Een afdelingsadmin mag geen systeembeheerder wijzigen." },
-          { status: 403 }
-        );
-      }
+  if (currentUser.role === "ORG_ADMIN") {
+    if (
+      !targetUser.organizationId ||
+      !currentUser.organizationAccessIds.includes(targetUser.organizationId)
+    ) {
+      return NextResponse.json(
+        { error: "Geen rechten om deze gebruiker te wijzigen." },
+        { status: 403 }
+      );
     }
-
+  
+    if (targetUser.role === "ADMIN") {
+      return NextResponse.json(
+        { error: "Een afdelingsadmin mag geen systeembeheerder wijzigen." },
+        { status: 403 }
+      );
+    }
+  }
     const user = await prisma.user.update({
       where: { id: userId },
       data: { isActive: true },
