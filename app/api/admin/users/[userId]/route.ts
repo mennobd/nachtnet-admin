@@ -175,7 +175,7 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ userId: string }> }
 ) {
-  const currentUser = await requireAdminOrOrgAdmin();
+  const currentUser = await requireAdmin();
 
   try {
     const { userId } = await params;
@@ -207,13 +207,6 @@ export async function DELETE(
       return NextResponse.json(
         { error: "Gebruiker niet gevonden." },
         { status: 404 }
-      );
-    }
-
-    if (currentUser.role !== "ADMIN") {
-      return NextResponse.json(
-        { error: "Alleen ADMIN mag gebruikers verwijderen." },
-        { status: 403 }
       );
     }
 
