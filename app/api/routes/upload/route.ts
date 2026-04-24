@@ -49,9 +49,37 @@ export async function POST(request: Request) {
     const rawCategory = String(formData.get("category") ?? "REGULIER");
     const category = normalizeRouteCategory(rawCategory);
 
+    const publishNow = String(formData.get("publishNow") ?? "false") === "true";
+    const activeFromRaw = String(formData.get("activeFrom") ?? "").trim();
+    const activeUntilRaw = String(formData.get("activeUntil") ?? "").trim();
+
+    const activeFrom = activeFromRaw ? new Date(activeFromRaw) : null;
+    const activeUntil = activeUntilRaw ? new Date(activeUntilRaw) : null;
+
     if (!file || !routeId) {
       return NextResponse.json(
         { error: "Bestand of routeId ontbreekt." },
+        { status: 400 }
+      );
+    }
+
+    if (activeFrom && Number.isNaN(activeFrom.getTime())) {
+      return NextResponse.json(
+        { error: "Begindatum is ongeldig." },
+        { status: 400 }
+      );
+    }
+
+    if (activeUntil && Number.isNaN(activeUntil.getTime())) {
+      return NextResponse.json(
+        { error: "Einddatum is ongeldig." },
+        { status: 400 }
+      );
+    }
+
+    if (activeFrom && activeUntil && activeUntil < activeFrom) {
+      return NextResponse.json(
+        { error: "Einddatum mag niet vóór de begindatum liggen." },
         { status: 400 }
       );
     }
@@ -95,6 +123,7 @@ export async function POST(request: Request) {
     const fileName = file.name;
     const version = `1.0.${checksum.slice(0, 8)}`;
     const storageKey = `routes/${routeId}/${Date.now()}-${fileName}`;
+    const priority = getPriorityForCategory(category);
 
     await s3.send(
       new PutObjectCommand({
@@ -105,30 +134,49 @@ export async function POST(request: Request) {
       })
     );
 
-    const routeFile = await prisma.routeFile.create({
-      data: {
-        routeId,
-        fileName,
-        storageKey,
-        checksum,
-        version,
-        category,
-      },
-    });
+    const result = await prisma.$transaction(async (tx) => {
+      const routeFile = await tx.routeFile.create({
+        data: {
+          routeId,
+          fileName,
+          storageKey,
+          checksum,
+          version,
+          category,
+        },
+      });
 
-    await prisma.manifestEntry.create({
-      data: {
-        routeId,
-        fileId: routeFile.id,
-        packageName: "RET_NACHTNET",
-        type: category,
-        version,
-        isPublished: false,
-        activeFrom: null,
-        activeUntil: null,
-        priority: getPriorityForCategory(category),
-        notes: null,
-      },
+      const manifestEntry = await tx.manifestEntry.create({
+        data: {
+          routeId,
+          fileId: routeFile.id,
+          packageName: "RET_NACHTNET",
+          type: category,
+          version,
+          isPublished: publishNow,
+          activeFrom: publishNow ? activeFrom : null,
+          activeUntil: publishNow ? activeUntil : null,
+          priority,
+          notes: null,
+        },
+      });
+
+      if (publishNow) {
+        await tx.manifestEntry.updateMany({
+          where: {
+            routeId,
+            type: category,
+            NOT: {
+              id: manifestEntry.id,
+            },
+          },
+          data: {
+            isPublished: false,
+          },
+        });
+      }
+
+      return { routeFile, manifestEntry };
     });
 
     return NextResponse.json({
@@ -138,7 +186,10 @@ export async function POST(request: Request) {
       version,
       storageKey,
       category,
-      priority: getPriorityForCategory(category),
+      priority,
+      published: result.manifestEntry.isPublished,
+      activeFrom: result.manifestEntry.activeFrom,
+      activeUntil: result.manifestEntry.activeUntil,
     });
   } catch (error) {
     console.error("UPLOAD ERROR:", error);
