@@ -28,6 +28,8 @@ model Organization {
   users     User[] @relation("PrimaryOrganizationUsers")
 
   accesses  UserOrganizationAccess[]
+
+  userApprovalRequests UserApprovalRequest[]
 }
 
 model User {
@@ -46,8 +48,8 @@ model User {
   updatedAt      DateTime     @updatedAt
   auditLogs      AuditLog[]
 
-  userApprovalRequests         UserApprovalRequest[] @relation("UserApprovalRequestedBy")
-  reviewedUserApprovalRequests UserApprovalRequest[] @relation("UserApprovalReviewedBy")
+  userApprovalRequestsCreated  UserApprovalRequest[] @relation("UserApprovalRequestedBy")
+  userApprovalRequestsReviewed UserApprovalRequest[] @relation("UserApprovalReviewedBy")
 }
 model AuditLog {
   id        String   @id @default(cuid())
