@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import HandleUserRequestButtons from "@/components/HandleUserRequestButtons";
+import UserRequestList from "@/components/UserRequestList";
 
 export default async function AdminUserRequestsPage() {
   await requireAdmin();
@@ -25,42 +26,8 @@ export default async function AdminUserRequestsPage() {
         </p>
       </section>
 
-      <section className="rounded-2xl bg-white p-8 shadow-sm space-y-4">
-        {requests.length === 0 ? (
-          <p className="text-sm text-slate-600">
-            Geen aanvragen beschikbaar.
-          </p>
-        ) : (
-          requests.map((req) => (
-            <div
-              key={req.id}
-              className="rounded-xl border p-4 flex justify-between items-start"
-            >
-              <div>
-                <p className="font-medium text-slate-900">{req.name}</p>
-                <p className="text-sm text-slate-500">{req.email}</p>
-                <p className="text-xs text-slate-500 mt-1">
-                  Afdeling: {req.organization?.name}
-                </p>
-                <p className="text-xs text-slate-400 mt-1">
-                  Rol: {req.requestedRole}
-                </p>
-                <div className="mt-2">
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusBadge(
-                      req.status
-                    )}`}
-                  >
-                    {req.status}
-                  </span>
-                </div>
-              </div>
-              {req.status === "PENDING" && (
-                <HandleUserRequestButtons requestId={req.id} />
-              )}
-            </div>
-          ))
-        )}
+      <section className="rounded-2xl bg-white p-8 shadow-sm">
+        <UserRequestList requests={requests} />
       </section>
     </div>
   );
