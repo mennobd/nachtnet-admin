@@ -78,6 +78,7 @@ model Route {
   depot           String
   status          RouteStatus    @default(DRAFT)
   notes           String?
+  category        RouteCategory  @default(REGULIER)
 
   files           RouteFile[]
   manifestEntries ManifestEntry[]
