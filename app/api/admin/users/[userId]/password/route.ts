@@ -56,20 +56,24 @@ export async function PATCH(
         );
       }
 
-      if (targetUser.organizationId !== currentUser.organizationId) {
-        return NextResponse.json(
-          { error: "Geen rechten om deze gebruiker te wijzigen." },
-          { status: 403 }
-        );
+      if (currentUser.role === "ORG_ADMIN") {
+        if (
+          !targetUser.organizationId ||
+          !currentUser.organizationAccessIds.includes(targetUser.organizationId)
+        ) {
+          return NextResponse.json(
+            { error: "Geen rechten om deze gebruiker te wijzigen." },
+            { status: 403 }
+          );
+        }
+      
+        if (targetUser.role === "ADMIN") {
+          return NextResponse.json(
+            { error: "Een afdelingsadmin mag geen systeembeheerder wijzigen." },
+            { status: 403 }
+          );
+        }
       }
-
-      if (targetUser.role === "ADMIN") {
-        return NextResponse.json(
-          { error: "Een afdelingsadmin mag geen systeembeheerder wijzigen." },
-          { status: 403 }
-        );
-      }
-    }
 
     const passwordHash = await bcrypt.hash(password, 10);
 
