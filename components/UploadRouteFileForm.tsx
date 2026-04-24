@@ -146,9 +146,11 @@ export default function UploadRouteFileForm({
               <input
                 id="activeFrom"
                 type="datetime-local"
-                value={activeFrom}
+                value={activeFrom || ""}
                 onChange={(e) => setActiveFrom(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+                className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500 ${
+                  activeFrom ? "text-black" : "text-slate-400"
+                }`}
               />
               <p className="mt-1 text-xs text-slate-500">
                 Leeg laten betekent direct actief.
@@ -162,12 +164,14 @@ export default function UploadRouteFileForm({
               >
                 Actief tot
               </label>
-              <input
-                id="activeUntil"
+             <input
+                id="activeFrom"
                 type="datetime-local"
-                value={activeUntil}
-                onChange={(e) => setActiveUntil(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+                value={activeFrom || ""}
+                onChange={(e) => setActiveFrom(e.target.value)}
+                className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500 ${
+                  activeUntil ? "text-black" : "text-slate-400"
+                }`}
               />
               <p className="mt-1 text-xs text-slate-500">
                 Leeg laten betekent geen einddatum.
