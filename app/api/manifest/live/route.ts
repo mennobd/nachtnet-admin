@@ -8,16 +8,10 @@ export async function GET() {
     const entries = await prisma.manifestEntry.findMany({
       where: {
         isPublished: true,
-        OR: [
-          { activeFrom: null },
-          { activeFrom: { lte: now } },
-        ],
+        OR: [{ activeFrom: null }, { activeFrom: { lte: now } }],
         AND: [
           {
-            OR: [
-              { activeUntil: null },
-              { activeUntil: { gte: now } },
-            ],
+            OR: [{ activeUntil: null }, { activeUntil: { gte: now } }],
           },
         ],
       },
@@ -25,10 +19,7 @@ export async function GET() {
         route: true,
         file: true,
       },
-      orderBy: [
-        { priority: "asc" },
-        { createdAt: "desc" },
-      ],
+      orderBy: [{ priority: "asc" }, { createdAt: "desc" }],
     });
 
     const uniqueRoutes = new Map<string, (typeof entries)[number]>();
@@ -38,12 +29,16 @@ export async function GET() {
         continue;
       }
 
-      if (!uniqueRoutes.has(entry.routeId)) {
-        uniqueRoutes.set(entry.routeId, entry);
+      const visibleRouteId = entry.route.routeCode;
+
+      if (!uniqueRoutes.has(visibleRouteId)) {
+        uniqueRoutes.set(visibleRouteId, entry);
       }
     }
 
     const routes = Array.from(uniqueRoutes.values()).map((entry) => {
+      const category = entry.file?.category ?? entry.type ?? "REGULIER";
+
       const fileUrl = `${process.env.APP_BASE_URL}/routes/acties/${encodeURIComponent(
         entry.file!.fileName
       )}`;
@@ -53,18 +48,22 @@ export async function GET() {
         lineNumber: entry.route!.lineNumber,
         title: entry.route!.title,
         depot: entry.route!.depot,
-        packageName: "RET_NACHTNET",
-        type: "Regulier",
+        packageName: entry.packageName,
+        type: category,
+        category,
         version: entry.version,
         active: true,
         fileName: entry.file!.fileName,
         fileUrl,
         checksum: entry.file!.checksum,
+        priority: entry.priority,
+        activeFrom: entry.activeFrom,
+        activeUntil: entry.activeUntil,
       };
     });
 
     return NextResponse.json({
-      version: "1.0.0",
+      version: "1.1.0",
       generatedAt: new Date().toISOString(),
       routeCount: routes.length,
       routes,
