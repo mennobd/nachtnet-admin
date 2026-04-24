@@ -90,11 +90,13 @@ export default function PublishManifestEntryForm({
             Begindatum en tijd
           </label>
           <input
-            id={`activeFrom-${entryId}`}
+            id="activeFrom"
             type="datetime-local"
-            value={activeFrom}
+            value={activeFrom || ""}
             onChange={(e) => setActiveFrom(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-slate-500"
+            className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500 ${
+              activeFrom ? "text-black" : "text-slate-400"
+            }`}
           />
           <p className="mt-1 text-xs text-slate-500">
             Laat leeg als de publicatie direct geldig mag zijn zodra deze live
@@ -110,11 +112,13 @@ export default function PublishManifestEntryForm({
             Einddatum en tijd
           </label>
           <input
-            id={`activeUntil-${entryId}`}
+            id="activeUntil"
             type="datetime-local"
-            value={activeUntil}
+            value={activeUntil || ""}
             onChange={(e) => setActiveUntil(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-slate-500"
+            className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500 ${
+              activeUntil ? "text-black" : "text-slate-400"
+            }`}
           />
           <p className="mt-1 text-xs text-slate-500">
             Gebruik dit voor tijdelijke omleidingen of tijdgebonden releases.
