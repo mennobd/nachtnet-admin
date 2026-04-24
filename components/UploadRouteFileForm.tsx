@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 type RouteCategory = "REGULIER" | "OMLEIDING" | "CALAMITEIT";
@@ -9,6 +10,8 @@ export default function UploadRouteFileForm({
 }: {
   routeId: string;
 }) {
+  const router = useRouter();
+
   const [file, setFile] = useState<File | null>(null);
   const [category, setCategory] = useState<RouteCategory>("REGULIER");
   const [publishNow, setPublishNow] = useState(false);
@@ -82,6 +85,11 @@ export default function UploadRouteFileForm({
 
       if (fileInput) {
         fileInput.value = "";
+      }
+
+      if (publishNow) {
+        router.push(`/dashboard/routes/${routeId}/publish`);
+        router.refresh();
       }
     } catch {
       setError("Er is een fout opgetreden tijdens het uploaden.");
