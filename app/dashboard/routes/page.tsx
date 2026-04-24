@@ -1,6 +1,20 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 
+type RouteEntry = {
+  isPublished: boolean;
+  activeFrom: Date | null;
+  activeUntil: Date | null;
+  priority: number;
+  createdAt: Date;
+  type: string;
+  file: {
+    category: string;
+    fileName: string;
+    version: string;
+  } | null;
+};
+
 function getPublicationState(entry: {
   isPublished: boolean;
   activeFrom: Date | null;
@@ -12,6 +26,24 @@ function getPublicationState(entry: {
   if (entry.activeFrom && entry.activeFrom > now) return "Gepland";
   if (entry.activeUntil && entry.activeUntil < now) return "Verlopen";
   return "Live";
+}
+
+function getActiveEntry(entries: RouteEntry[]) {
+  const now = new Date();
+
+  return (
+    entries
+      .filter((entry) => {
+        if (!entry.isPublished) return false;
+        if (entry.activeFrom && entry.activeFrom > now) return false;
+        if (entry.activeUntil && entry.activeUntil < now) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        if (a.priority !== b.priority) return a.priority - b.priority;
+        return b.createdAt.getTime() - a.createdAt.getTime();
+      })[0] ?? null
+  );
 }
 
 function getStatusClasses(status: string) {
@@ -68,22 +100,28 @@ export default async function RoutesPage({
           file: true,
         },
         orderBy: [{ priority: "asc" }, { createdAt: "desc" }],
-        take: 1,
       },
     },
   });
 
   const enrichedRoutes = routes.map((route) => {
     const latestFile = route.files[0] ?? null;
-    const latestPublication = route.manifestEntries[0] ?? null;
+    const activeEntry = getActiveEntry(route.manifestEntries);
+    const latestPublication = activeEntry ?? route.manifestEntries[0] ?? null;
+
     const publicationState = latestPublication
       ? getPublicationState(latestPublication)
       : "Geen publicatie";
+
+    const activeCategory =
+      activeEntry?.file?.category ?? activeEntry?.type ?? "Geen actieve route";
 
     return {
       ...route,
       latestFile,
       latestPublication,
+      activeEntry,
+      activeCategory,
       publicationState,
     };
   });
@@ -257,31 +295,37 @@ export default async function RoutesPage({
                       {route.publicationState}
                     </span>
 
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${getCategoryBadge(
-                        route.category
-                      )}`}
-                    >
-                      {route.category}
-                    </span>
+                    {route.activeEntry ? (
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-medium ${getCategoryBadge(
+                          route.activeCategory
+                        )}`}
+                      >
+                        {route.activeCategory} actief
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-700">
+                        Geen actieve route
+                      </span>
+                    )}
 
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
                       {route.status}
                     </span>
 
-                    {route.latestPublication?.activeFrom ? (
+                    {route.activeEntry?.activeFrom ? (
                       <span className="text-xs text-slate-500">
                         Vanaf:{" "}
-                        {new Date(route.latestPublication.activeFrom).toLocaleString(
+                        {new Date(route.activeEntry.activeFrom).toLocaleString(
                           "nl-NL"
                         )}
                       </span>
                     ) : null}
 
-                    {route.latestPublication?.activeUntil ? (
+                    {route.activeEntry?.activeUntil ? (
                       <span className="text-xs text-slate-500">
                         Tot:{" "}
-                        {new Date(route.latestPublication.activeUntil).toLocaleString(
+                        {new Date(route.activeEntry.activeUntil).toLocaleString(
                           "nl-NL"
                         )}
                       </span>
