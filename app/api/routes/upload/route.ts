@@ -14,20 +14,40 @@ const s3 = new S3Client({
   forcePathStyle: true,
 });
 
+function normalizeRouteCategory(value: string) {
+  if (value === "OMLEIDING") return "OMLEIDING";
+  if (value === "CALAMITEIT") return "CALAMITEIT";
+  return "REGULIER";
+}
+
+function getPriorityForCategory(category: string) {
+  switch (category) {
+    case "CALAMITEIT":
+      return 10;
+    case "OMLEIDING":
+      return 50;
+    default:
+      return 100;
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const user = await getRequiredMutationUser();
 
-if (!user) {
-  return NextResponse.json(
-    { error: "Geen rechten voor deze actie." },
-    { status: 403 }
-  );
-}
+    if (!user) {
+      return NextResponse.json(
+        { error: "Geen rechten voor deze actie." },
+        { status: 403 }
+      );
+    }
+
     const formData = await request.formData();
 
     const file = formData.get("file") as File | null;
     const routeId = String(formData.get("routeId") ?? "");
+    const rawCategory = String(formData.get("category") ?? "REGULIER");
+    const category = normalizeRouteCategory(rawCategory);
 
     if (!file || !routeId) {
       return NextResponse.json(
@@ -70,10 +90,7 @@ if (!user) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    const checksum = crypto
-      .createHash("sha256")
-      .update(buffer)
-      .digest("hex");
+    const checksum = crypto.createHash("sha256").update(buffer).digest("hex");
 
     const fileName = file.name;
     const version = `1.0.${checksum.slice(0, 8)}`;
@@ -95,23 +112,24 @@ if (!user) {
         storageKey,
         checksum,
         version,
+        category,
       },
     });
 
     await prisma.manifestEntry.create({
-  data: {
-    routeId,
-    fileId: routeFile.id,
-    packageName: "RET_NACHTNET",
-    type: "Regulier",
-    version,
-    isPublished: false,
-    activeFrom: null,
-    activeUntil: null,
-    priority: 100,
-    notes: null,
-  },
-});
+      data: {
+        routeId,
+        fileId: routeFile.id,
+        packageName: "RET_NACHTNET",
+        type: category,
+        version,
+        isPublished: false,
+        activeFrom: null,
+        activeUntil: null,
+        priority: getPriorityForCategory(category),
+        notes: null,
+      },
+    });
 
     return NextResponse.json({
       success: true,
@@ -119,14 +137,15 @@ if (!user) {
       checksum,
       version,
       storageKey,
+      category,
+      priority: getPriorityForCategory(category),
     });
   } catch (error) {
     console.error("UPLOAD ERROR:", error);
 
     return NextResponse.json(
       {
-        error:
-          error instanceof Error ? error.message : "Onbekende uploadfout.",
+        error: error instanceof Error ? error.message : "Onbekende uploadfout.",
       },
       { status: 500 }
     );
