@@ -8,14 +8,12 @@ export default function PublishManifestEntryForm({
   initialIsPublished,
   initialActiveFrom,
   initialActiveUntil,
-  initialPriority,
   initialNotes,
 }: {
   entryId: string;
   initialIsPublished: boolean;
   initialActiveFrom: string;
   initialActiveUntil: string;
-  initialPriority: number;
   initialNotes: string;
 }) {
   const router = useRouter();
@@ -23,7 +21,6 @@ export default function PublishManifestEntryForm({
   const [isPublished, setIsPublished] = useState(initialIsPublished);
   const [activeFrom, setActiveFrom] = useState(initialActiveFrom);
   const [activeUntil, setActiveUntil] = useState(initialActiveUntil);
-  const [priority, setPriority] = useState(String(initialPriority));
   const [notes, setNotes] = useState(initialNotes);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
@@ -45,7 +42,6 @@ export default function PublishManifestEntryForm({
           isPublished,
           activeFrom,
           activeUntil,
-          priority: Number(priority),
           notes,
         }),
       });
@@ -99,7 +95,6 @@ export default function PublishManifestEntryForm({
             value={activeFrom}
             onChange={(e) => setActiveFrom(e.target.value)}
             className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-slate-500"
-            placeholder="Bijv. 2026-04-20T06:00"
           />
           <p className="mt-1 text-xs text-slate-500">
             Laat leeg als de publicatie direct geldig mag zijn zodra deze live
@@ -120,36 +115,13 @@ export default function PublishManifestEntryForm({
             value={activeUntil}
             onChange={(e) => setActiveUntil(e.target.value)}
             className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-slate-500"
-            placeholder="Bijv. 2026-04-20T18:00"
           />
           <p className="mt-1 text-xs text-slate-500">
             Gebruik dit voor tijdelijke omleidingen of tijdgebonden releases.
           </p>
         </div>
 
-        <div>
-          <label
-            htmlFor={`priority-${entryId}`}
-            className="mb-2 block text-sm font-medium text-slate-700"
-          >
-            Prioriteit
-          </label>
-          <input
-            id={`priority-${entryId}`}
-            type="number"
-            value={priority}
-            onChange={(e) => setPriority(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-slate-500"
-            placeholder="Bijv. 1"
-          />
-          <p className="mt-1 text-xs text-slate-500">
-            Lager getal = hogere prioriteit. Gebruik bijvoorbeeld{" "}
-            <span className="font-medium">1</span> voor een tijdelijke omleiding
-            die de standaardroute moet overrulen.
-          </p>
-        </div>
-
-        <div>
+        <div className="md:col-span-2">
           <label
             htmlFor={`notes-${entryId}`}
             className="mb-2 block text-sm font-medium text-slate-700"
@@ -171,11 +143,10 @@ export default function PublishManifestEntryForm({
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-        <p className="font-medium text-slate-700">Aanbevolen werkwijze</p>
+        <p className="font-medium text-slate-700">Prioriteit</p>
         <p className="mt-1">
-          Voor standaardroutes laat je einddatum leeg en gebruik je een normale
-          prioriteit. Voor omleidingen vul je begin- en einddatum in en geef je
-          een hogere prioriteit.
+          De prioriteit wordt automatisch bepaald door de routecategorie:
+          calamiteit gaat vóór omleiding en omleiding gaat vóór regulier.
         </p>
       </div>
 
