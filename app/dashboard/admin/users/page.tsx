@@ -77,7 +77,7 @@ export default async function UsersPage() {
           Gebruikersbeheer
         </h2>
         <p className="mt-2 text-slate-600">
-          Beheer hier accounts, rollen, afdelingen, activatie en wachtwoorden.
+          Beheer hier gebruikersaccounts. Details en beheeracties staan per gebruiker onder Aanpassen.
         </p>
       </section>
 
@@ -149,22 +149,22 @@ export default async function UsersPage() {
                   </div>
                 </div>
 
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <UserActivationButton
-                    userId={user.id}
-                    userName={user.name}
-                    isActive={user.isActive}
-                  />
-
-                  {currentUser.role === "ADMIN" ? (
-                    <DeleteUserButton userId={user.id} userName={user.name} />
-                  ) : null}
-                </div>
-
                 <details className="mt-4 rounded-xl border border-slate-200 bg-slate-50">
                   <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-slate-700 [&::-webkit-details-marker]:hidden">
                     Aanpassen…
                   </summary>
+
+                  <div className="mb-4 flex flex-wrap gap-3">
+                    <UserActivationButton
+                      userId={user.id}
+                      userName={user.name}
+                      isActive={user.isActive}
+                    />
+                  
+                    {currentUser.role === "ADMIN" ? (
+                      <DeleteUserButton userId={user.id} userName={user.name} />
+                    ) : null}
+                  </div>
 
                   <div className="border-t border-slate-200 p-4">
                     <EditUserForm
