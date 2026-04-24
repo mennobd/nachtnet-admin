@@ -45,11 +45,16 @@ export default async function AdminUserRequestsPage() {
                 <p className="text-xs text-slate-400 mt-1">
                   Rol: {req.requestedRole}
                 </p>
-                <p className="text-xs text-slate-400 mt-1">
-                  Status: {req.status}
-                </p>
+                <div className="mt-2">
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusBadge(
+                      req.status
+                    )}`}
+                  >
+                    {req.status}
+                  </span>
+                </div>
               </div>
-
               {req.status === "PENDING" && (
                 <HandleUserRequestButtons requestId={req.id} />
               )}
@@ -59,4 +64,17 @@ export default async function AdminUserRequestsPage() {
       </section>
     </div>
   );
+}
+
+function getStatusBadge(status: string) {
+  switch (status) {
+    case "PENDING":
+      return "bg-yellow-100 text-yellow-800";
+    case "APPROVED":
+      return "bg-green-100 text-green-700";
+    case "REJECTED":
+      return "bg-red-100 text-red-700";
+    default:
+      return "bg-slate-200 text-slate-700";
+  }
 }
