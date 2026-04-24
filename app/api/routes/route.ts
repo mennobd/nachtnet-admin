@@ -35,15 +35,22 @@ if (!user) {
     const body = await request.json();
 
     const {
-      routeCode,
-      title,
-      lineNumber,
-      direction,
-      depot,
-      notes,
-    } = body;
-
-    // simpele validatie
+        routeCode,
+        title,
+        lineNumber,
+        direction,
+        depot,
+        notes,
+        category,
+      } = body;
+      
+      const routeCategory =
+        category === "OMLEIDING"
+          ? "OMLEIDING"
+          : category === "CALAMITEIT"
+          ? "CALAMITEIT"
+          : "REGULIER";
+    
     if (!routeCode || !title || !lineNumber || !direction || !depot) {
       return NextResponse.json(
         { error: "Verplichte velden ontbreken" },
@@ -59,6 +66,7 @@ if (!user) {
         direction,
         depot,
         notes,
+        category: routeCategory,
       },
     });
 
