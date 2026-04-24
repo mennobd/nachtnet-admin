@@ -4,6 +4,17 @@ import { writeAuditLog } from "@/lib/audit";
 import { getCurrentUser, getRequiredMutationUser } from "@/lib/auth";
 import { validateManifestEntryForPublish } from "@/lib/release-validation";
 
+function getPriorityForCategory(category: string | null | undefined) {
+  switch (category) {
+    case "CALAMITEIT":
+      return 10;
+    case "OMLEIDING":
+      return 50;
+    default:
+      return 100;
+  }
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ entryId: string }> }
@@ -34,22 +45,10 @@ export async function PATCH(
         ? new Date(body.activeUntil)
         : null;
 
-    const priority =
-      body.priority !== undefined && body.priority !== null
-        ? Number(body.priority)
-        : 100;
-
     const notes =
       body.notes && String(body.notes).trim() !== ""
         ? String(body.notes).trim()
         : null;
-
-    if (Number.isNaN(priority)) {
-      return NextResponse.json(
-        { error: "Prioriteit is ongeldig." },
-        { status: 400 }
-      );
-    }
 
     if (activeFrom && Number.isNaN(activeFrom.getTime())) {
       return NextResponse.json(
@@ -108,19 +107,10 @@ export async function PATCH(
           { status: 400 }
         );
       }
-
-      await prisma.manifestEntry.updateMany({
-        where: {
-          routeId: existingEntry.routeId,
-          NOT: {
-            id: entryId,
-          },
-        },
-        data: {
-          isPublished: false,
-        },
-      });
     }
+
+    const category = existingEntry.file?.category ?? "REGULIER";
+    const priority = getPriorityForCategory(category);
 
     const updated = await prisma.manifestEntry.update({
       where: { id: entryId },
@@ -129,6 +119,7 @@ export async function PATCH(
         activeFrom,
         activeUntil,
         priority,
+        type: category,
         notes,
       },
       include: {
@@ -145,11 +136,13 @@ export async function PATCH(
         routeId: updated.routeId,
         routeCode: updated.route?.routeCode ?? null,
         fileName: updated.file?.fileName ?? null,
+        fileCategory: updated.file?.category ?? null,
         version: updated.version,
         isPublished: updated.isPublished,
         activeFrom: updated.activeFrom,
         activeUntil: updated.activeUntil,
         priority: updated.priority,
+        type: updated.type,
         notes: updated.notes,
         performedBy: currentUser.email,
       },
