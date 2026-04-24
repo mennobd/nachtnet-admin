@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Image from "next/image";
-import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 
 export default async function DashboardLayout({
@@ -19,24 +18,35 @@ export default async function DashboardLayout({
     ];
 
     if (user.role === "ADMIN" || user.role === "ORG_ADMIN") {
-        baseItems.push(
-          {
-            href: "/dashboard/admin/users",
-            label: "Gebruikers",
-          },
-          {
-            href: "/dashboard/admin/organizations",
-            label: "Afdelingen",
-          }
-        );
-      }
-      
-      if (user.role === "ADMIN") {
-        baseItems.push({
+      baseItems.push({
+        href: "/dashboard/admin/users",
+        label: "Gebruikers",
+      });
+    }
+
+    if (user.role === "ORG_ADMIN") {
+      baseItems.push({
+        href: "/dashboard/org-admin/requests",
+        label: "Gebruiker aanvragen",
+      });
+    }
+
+    if (user.role === "ADMIN") {
+      baseItems.push(
+        {
+          href: "/dashboard/admin/user-requests",
+          label: "Aanvragen",
+        },
+        {
+          href: "/dashboard/admin/organizations",
+          label: "Afdelingen",
+        },
+        {
           href: "/dashboard/admin/access",
           label: "Beheerrechten",
-        });
-      }
+        }
+      );
+    }
 
     return baseItems;
   }
