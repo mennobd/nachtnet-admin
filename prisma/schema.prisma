@@ -128,7 +128,6 @@ model UserOrganizationAccess {
   @@unique([userId, organizationId])
   @@index([userId])
   @@index([organizationId])
-  userApprovalRequests UserApprovalRequest[]
 }
 
 enum UserApprovalStatus {
