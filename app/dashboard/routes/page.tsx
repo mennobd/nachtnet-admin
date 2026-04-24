@@ -29,6 +29,19 @@ function getStatusClasses(status: string) {
   }
 }
 
+function getCategoryBadge(category: string) {
+  switch (category) {
+    case "REGULIER":
+      return "bg-green-100 text-green-700";
+    case "OMLEIDING":
+      return "bg-orange-100 text-orange-700";
+    case "CALAMITEIT":
+      return "bg-red-100 text-red-700";
+    default:
+      return "bg-slate-200 text-slate-700";
+  }
+}
+
 export default async function RoutesPage({
   searchParams,
 }: {
