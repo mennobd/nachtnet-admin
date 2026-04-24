@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 
+type RouteCategory = "REGULIER" | "OMLEIDING" | "CALAMITEIT";
+
 export default function UploadRouteFileForm({
   routeId,
 }: {
   routeId: string;
 }) {
   const [file, setFile] = useState<File | null>(null);
+  const [category, setCategory] = useState<RouteCategory>("REGULIER");
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,6 +32,7 @@ export default function UploadRouteFileForm({
       const formData = new FormData();
       formData.append("routeId", routeId);
       formData.append("file", file);
+      formData.append("category", category);
 
       const response = await fetch("/api/routes/upload", {
         method: "POST",
@@ -57,6 +61,7 @@ export default function UploadRouteFileForm({
         `Upload gelukt. Bestand: ${data.fileName}, versie: ${data.version}`
       );
       setFile(null);
+      setCategory("REGULIER");
       setLoading(false);
 
       const fileInput = document.getElementById(
@@ -74,6 +79,30 @@ export default function UploadRouteFileForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <div>
+        <label
+          htmlFor="route-category"
+          className="mb-2 block text-sm font-medium text-slate-700"
+        >
+          Routecategorie
+        </label>
+
+        <select
+          id="route-category"
+          value={category}
+          onChange={(e) => setCategory(e.target.value as RouteCategory)}
+          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+        >
+          <option value="REGULIER">Regulier</option>
+          <option value="OMLEIDING">Omleiding</option>
+          <option value="CALAMITEIT">Calamiteit</option>
+        </select>
+
+        <p className="mt-1 text-xs text-slate-500">
+          Kies de categorie die hoort bij deze nieuwe versie van de route.
+        </p>
+      </div>
+
       <div>
         <label
           htmlFor="route-upload-file"
