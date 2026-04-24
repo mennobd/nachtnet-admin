@@ -19,6 +19,12 @@ enum RouteStatus {
   ARCHIVED
 }
 
+enum RouteCategory {
+  REGULIER
+  OMLEIDING
+  CALAMITEIT
+}
+
 model Organization {
   id        String   @id @default(cuid())
   name      String   @unique
