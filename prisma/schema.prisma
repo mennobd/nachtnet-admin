@@ -96,6 +96,7 @@ model RouteFile {
   storageKey      String?
   checksum        String
   version         String
+  category        RouteCategory   @default(REGULIER)
 
   manifestEntries ManifestEntry[]
 
