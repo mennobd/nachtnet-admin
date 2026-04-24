@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAdminOrOrgAdmin } from "@/lib/auth";
+import { requireAdmin, requireAdminOrOrgAdmin } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 
 export async function PATCH(
