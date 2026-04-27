@@ -81,12 +81,14 @@ export default async function RoutesPage({
     q?: string;
     publication?: string;
     upload?: string;
+    depot?: string;
   }>;
 }) {
   const params = await searchParams;
   const q = (params.q ?? "").trim().toLowerCase();
   const publicationFilter = params.publication ?? "alles";
   const uploadFilter = params.upload ?? "alles";
+  const depotFilter = params.depot ?? "alles";
 
   const routes = await prisma.route.findMany({
     orderBy: { createdAt: "desc" },
@@ -141,13 +143,23 @@ export default async function RoutesPage({
       (uploadFilter === "met-upload" && !!route.latestFile) ||
       (uploadFilter === "zonder-upload" && !route.latestFile);
 
-    return matchesQuery && matchesPublication && matchesUpload;
+    const matchesDepot =
+      depotFilter === "alles" ||
+      route.depot.toLowerCase() === depotFilter.toLowerCase();
+
+    return matchesQuery && matchesPublication && matchesUpload && matchesDepot;
   });
 
   const totalRoutes = enrichedRoutes.length;
-  const routesWithoutUpload = enrichedRoutes.filter((route) => !route.latestFile).length;
-  const liveCount = enrichedRoutes.filter((route) => route.publicationState === "Live").length;
-  const plannedCount = enrichedRoutes.filter((route) => route.publicationState === "Gepland").length;
+  const routesWithoutUpload = enrichedRoutes.filter(
+    (route) => !route.latestFile
+  ).length;
+  const liveCount = enrichedRoutes.filter(
+    (route) => route.publicationState === "Live"
+  ).length;
+  const plannedCount = enrichedRoutes.filter(
+    (route) => route.publicationState === "Gepland"
+  ).length;
 
   return (
     <div className="space-y-6">
@@ -200,7 +212,7 @@ export default async function RoutesPage({
       </section>
 
       <section className="rounded-2xl bg-white p-6 shadow-sm">
-        <form className="grid gap-4 md:grid-cols-4">
+        <form className="grid gap-4 md:grid-cols-5">
           <div className="md:col-span-2">
             <label className="mb-2 block text-sm font-medium text-slate-700">
               Zoeken
@@ -246,7 +258,24 @@ export default async function RoutesPage({
             </select>
           </div>
 
-          <div className="md:col-span-4 flex items-center gap-3">
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Vestiging
+            </label>
+            <select
+              name="depot"
+              defaultValue={depotFilter}
+              className="w-full rounded-xl border border-slate-300 px-4 py-3"
+            >
+              <option value="alles">Alles</option>
+              <option value="Zuid">Zuid</option>
+              <option value="Kleiweg">Kleiweg</option>
+              <option value="Krimpen">Krimpen</option>
+              <option value="NACHTNET">NACHTNET</option>
+            </select>
+          </div>
+
+          <div className="md:col-span-5 flex items-center gap-3">
             <button
               type="submit"
               className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800"
@@ -266,7 +295,9 @@ export default async function RoutesPage({
 
       <section className="rounded-2xl bg-white p-8 shadow-sm">
         {filteredRoutes.length === 0 ? (
-          <p className="text-slate-600">Geen routes gevonden voor deze filters.</p>
+          <p className="text-slate-600">
+            Geen routes gevonden voor deze filters.
+          </p>
         ) : (
           <div className="space-y-4">
             {filteredRoutes.map((route) => (
@@ -311,6 +342,10 @@ export default async function RoutesPage({
 
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
                       {route.status}
+                    </span>
+
+                    <span className="rounded-full bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
+                      {route.depot}
                     </span>
 
                     {route.activeEntry?.activeFrom ? (
