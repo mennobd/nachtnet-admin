@@ -1,40 +1,89 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { getRequiredMutationUser } from "@/lib/auth";
 
-const severityRank: Record<string, number> = {
-  CRITICAL: 1,
-  WARNING: 2,
-  INFO: 3,
-};
+export async function PATCH(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getRequiredMutationUser();
+    if (!user) {
+      return NextResponse.json(
+        { error: "Geen rechten." },
+        { status: 403 }
+      );
+    }
 
-function normalizeDepot(value: string | null) {
-  const depot = String(value ?? "").toUpperCase();
+    const { id } = await context.params;
+    const body = await request.json();
 
-  if (depot === "ZUID") return "ZUID";
-  if (depot === "KLEIWEG") return "KLEIWEG";
-  if (depot === "NACHTNET") return "NACHTNET";
+    const updated = await prisma.systemMessage.update({
+      where: { id },
+      data: {
+        title: body.title,
+        message: body.message,
+        severity: body.severity,
+        targetDepot: body.targetDepot,
+        active: body.active,
+        activeFrom: new Date(body.activeFrom),
+        activeUntil: body.activeUntil
+          ? new Date(body.activeUntil)
+          : null,
+      },
+    });
 
-  return null;
+    console.log("SYSTEM MESSAGE UPDATED:", {
+      id,
+      user: user.email,
+    });
+
+    return NextResponse.json(updated);
+  } catch (error) {
+    console.error("PATCH ERROR:", error);
+
+    return NextResponse.json(
+      { error: "Update mislukt" },
+      { status: 500 }
+    );
+  }
 }
 
-export async function GET(request: Request) {
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
-    const now = new Date();
-    const url = new URL(request.url);
-    const depot = normalizeDepot(url.searchParams.get("depot"));
+    const user = await getRequiredMutationUser();
+    if (!user) {
+      return NextResponse.json(
+        { error: "Geen rechten." },
+        { status: 403 }
+      );
+    }
 
-    const messages = await prisma.systemMessage.findMany({
-      where: {
-        active: true,
-        activeFrom: {
-          lte: now,
-        },
-        OR: [
-          { activeUntil: { equals: null } },
-          { activeUntil: { gte: now } },
-        ],
-        ...(depot
-          ? {
+    const { id } = await context.params;
+
+    const updated = await prisma.systemMessage.update({
+      where: { id },
+      data: { active: false },
+    });
+
+    console.log("SYSTEM MESSAGE DEACTIVATED:", {
+      id,
+      user: user.email,
+    });
+
+    return NextResponse.json(updated);
+  } catch (error) {
+    console.error("DELETE ERROR:", error);
+
+    return NextResponse.json(
+      { error: "Deactiveren mislukt" },
+      { status: 500 }
+    );
+  }
+}          ? {
               targetDepot: {
                 in: ["ALL", depot],
               },
