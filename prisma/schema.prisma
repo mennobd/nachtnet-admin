@@ -166,3 +166,35 @@ model UserApprovalRequest {
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
 }
+
+enum SystemMessageSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum SystemMessageTargetDepot {
+  ALL
+  ZUID
+  KLEIWEG
+  NACHTNET
+}
+
+model SystemMessage {
+  id          String                    @id @default(cuid())
+  title       String
+  message     String
+  severity    SystemMessageSeverity     @default(INFO)
+  targetDepot SystemMessageTargetDepot  @default(ALL)
+  active      Boolean                   @default(true)
+  activeFrom  DateTime                  @default(now())
+  activeUntil DateTime?
+  createdBy   String?
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+
+  @@index([active])
+  @@index([targetDepot])
+  @@index([severity])
+}
+
