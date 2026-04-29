@@ -14,13 +14,13 @@ export async function GET(request: Request) {
         AND: [
           {
             OR: [
-              { activeFrom: null },
+              { activeFrom: { equals: null } },
               { activeFrom: { lte: now } },
             ],
           },
           {
             OR: [
-              { activeUntil: null },
+              { activeUntil: { equals: null } },
               { activeUntil: { gte: now } },
             ],
           },
