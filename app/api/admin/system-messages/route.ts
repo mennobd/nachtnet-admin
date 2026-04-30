@@ -8,6 +8,8 @@ import {
 import { prisma } from "@/lib/db";
 import { getRequiredMutationUser } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
+import { logEvent } from "@/lib/logger";
+import { validateSystemMessage } from "@/lib/system-message-validator";
 
 function normalizeSeverity(value: unknown): SystemMessageSeverity {
   if (value === "CRITICAL") return "CRITICAL";
@@ -80,25 +82,17 @@ export async function POST(request: Request) {
     const activeFrom = parseDateOrNow(body.activeFrom);
     const activeUntil = parseOptionalDate(body.activeUntil);
 
-    if (!title || !message) {
-      return NextResponse.json(
-        { error: "Titel en bericht zijn verplicht." },
-        { status: 400 }
-      );
-    }
+    const validationError = validateSystemMessage({
+      title,
+      message,
+      severity,
+      targetDepot,
+      activeFrom,
+      activeUntil,
+    });
 
-    if (!activeFrom) {
-      return NextResponse.json(
-        { error: "Actief vanaf is ongeldig." },
-        { status: 400 }
-      );
-    }
-
-    if (activeUntil && activeUntil < activeFrom) {
-      return NextResponse.json(
-        { error: "Actief tot mag niet vóór actief vanaf liggen." },
-        { status: 400 }
-      );
+    if (validationError) {
+      return NextResponse.json({ error: validationError }, { status: 400 });
     }
 
     const created = await prisma.systemMessage.create({
@@ -108,7 +102,7 @@ export async function POST(request: Request) {
         severity,
         targetDepot,
         active,
-        activeFrom,
+        activeFrom: activeFrom!,
         activeUntil,
         createdBy: user.email,
       },
@@ -129,9 +123,25 @@ export async function POST(request: Request) {
       },
     });
 
+    logEvent("SYSTEM_MESSAGE_CREATED", {
+      id: created.id,
+      title: created.title,
+      severity: created.severity,
+      targetDepot: created.targetDepot,
+      active: created.active,
+      createdBy: user.email,
+    });
+
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
-    console.error("CREATE SYSTEM MESSAGE ERROR:", error);
+    logEvent(
+      "SYSTEM_MESSAGE_CREATE_FAILED",
+      {
+        error: error instanceof Error ? error.message : "Onbekende fout",
+        performedBy: user.email,
+      },
+      "ERROR"
+    );
 
     return NextResponse.json(
       { error: "SystemMessage aanmaken mislukt." },
