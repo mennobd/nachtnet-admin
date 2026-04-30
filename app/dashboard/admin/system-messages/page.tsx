@@ -35,6 +35,19 @@ function getCardClasses(severity: string, active: boolean) {
   }
 }
 
+function getSeverityBarClasses(severity: string, active: boolean) {
+  if (!active) return "bg-slate-300";
+
+  switch (severity) {
+    case "CRITICAL":
+      return "bg-red-600";
+    case "WARNING":
+      return "bg-orange-500";
+    default:
+      return "bg-blue-500";
+  }
+}
+
 function formatDateForInput(date: Date | null) {
   if (!date) return "";
   return new Date(date).toISOString().slice(0, 16);
@@ -43,6 +56,35 @@ function formatDateForInput(date: Date | null) {
 function formatDate(date: Date | null) {
   if (!date) return "Geen eindtijd";
   return new Date(date).toLocaleString("nl-NL");
+}
+
+function isLiveNow(message: {
+  active: boolean;
+  activeFrom: Date;
+  activeUntil: Date | null;
+}) {
+  const now = new Date();
+
+  if (!message.active) return false;
+  if (message.activeFrom > now) return false;
+  if (message.activeUntil && message.activeUntil < now) return false;
+
+  return true;
+}
+
+function isCriticalOlderThan24Hours(message: {
+  active: boolean;
+  severity: string;
+  activeFrom: Date;
+}) {
+  if (!message.active) return false;
+  if (message.severity !== "CRITICAL") return false;
+
+  const now = new Date().getTime();
+  const activeFrom = new Date(message.activeFrom).getTime();
+  const ageMs = now - activeFrom;
+
+  return ageMs > 24 * 60 * 60 * 1000;
 }
 
 export default async function SystemMessagesPage() {
@@ -62,11 +104,15 @@ export default async function SystemMessagesPage() {
   });
 
   const activeCount = messages.filter((message) => message.active).length;
+  const liveNowCount = messages.filter((message) => isLiveNow(message)).length;
   const criticalCount = messages.filter(
     (message) => message.active && message.severity === "CRITICAL"
   ).length;
   const warningCount = messages.filter(
     (message) => message.active && message.severity === "WARNING"
+  ).length;
+  const staleCriticalCount = messages.filter((message) =>
+    isCriticalOlderThan24Hours(message)
   ).length;
 
   return (
@@ -86,6 +132,9 @@ export default async function SystemMessagesPage() {
             <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
               Actief: {activeCount}
             </span>
+            <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
+              Live nu: {liveNowCount}
+            </span>
             <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
               Critical: {criticalCount}
             </span>
@@ -94,6 +143,13 @@ export default async function SystemMessagesPage() {
             </span>
           </div>
         </div>
+
+        {staleCriticalCount > 0 ? (
+          <div className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            Let op: er zijn {staleCriticalCount} CRITICAL berichten langer dan
+            24 uur actief. Controleer of deze nog nodig zijn.
+          </div>
+        ) : null}
       </section>
 
       <section className="rounded-2xl border border-red-200 bg-red-50 p-8 shadow-sm">
@@ -141,92 +197,125 @@ export default async function SystemMessagesPage() {
           </p>
         ) : (
           <div className="space-y-4">
-            {sortedMessages.map((message) => (
-              <div
-                key={message.id}
-                className={`rounded-xl border p-4 ${getCardClasses(
-                  message.severity,
-                  message.active
-                )}`}
-              >
-                <div className="mb-4 flex items-start justify-between gap-4">
-                  <div>
-                    <p className="font-semibold text-slate-900">
-                      {message.title}
-                    </p>
-                    <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">
-                      {message.message}
-                    </p>
+            {sortedMessages.map((message) => {
+              const liveNow = isLiveNow(message);
+              const staleCritical = isCriticalOlderThan24Hours(message);
 
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <span
-                        className={`rounded-full border px-3 py-1 text-xs font-medium ${getSeverityClasses(
-                          message.severity
-                        )}`}
-                      >
-                        {message.severity}
-                      </span>
+              return (
+                <div
+                  key={message.id}
+                  className={`overflow-hidden rounded-xl border ${getCardClasses(
+                    message.severity,
+                    message.active
+                  )}`}
+                >
+                  <div className="flex">
+                    <div
+                      className={`w-2 shrink-0 ${getSeverityBarClasses(
+                        message.severity,
+                        message.active
+                      )}`}
+                    />
 
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-                        {message.targetDepot}
-                      </span>
+                    <div className="flex-1 p-4">
+                      <div className="mb-4 flex items-start justify-between gap-4">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-semibold text-slate-900">
+                              {message.title}
+                            </p>
 
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-medium ${
-                          message.active
-                            ? "bg-green-100 text-green-700"
-                            : "bg-slate-200 text-slate-700"
-                        }`}
-                      >
-                        {message.active ? "Actief" : "Inactief"}
-                      </span>
+                            {liveNow ? (
+                              <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
+                                LIVE NU
+                              </span>
+                            ) : null}
 
-                      <span className="text-xs text-slate-500">
-                        Vanaf: {formatDate(message.activeFrom)}
-                      </span>
+                            {staleCritical ? (
+                              <span className="rounded-full bg-red-200 px-3 py-1 text-xs font-medium text-red-800">
+                                CRITICAL &gt; 24 uur
+                              </span>
+                            ) : null}
+                          </div>
 
-                      <span className="text-xs text-slate-500">
-                        Tot: {formatDate(message.activeUntil)}
-                      </span>
+                          <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">
+                            {message.message}
+                          </p>
+
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                            <span
+                              className={`rounded-full border px-3 py-1 text-xs font-medium ${getSeverityClasses(
+                                message.severity
+                              )}`}
+                            >
+                              {message.severity}
+                            </span>
+
+                            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                              {message.targetDepot}
+                            </span>
+
+                            <span
+                              className={`rounded-full px-3 py-1 text-xs font-medium ${
+                                message.active
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-slate-200 text-slate-700"
+                              }`}
+                            >
+                              {message.active ? "Actief" : "Inactief"}
+                            </span>
+
+                            <span className="text-xs text-slate-500">
+                              Vanaf: {formatDate(message.activeFrom)}
+                            </span>
+
+                            <span className="text-xs text-slate-500">
+                              Tot: {formatDate(message.activeUntil)}
+                            </span>
+                          </div>
+
+                          <p className="mt-2 text-xs text-slate-400">
+                            Aangemaakt door: {message.createdBy ?? "Onbekend"} ·
+                            Aangemaakt op: {formatDate(message.createdAt)}
+                          </p>
+                        </div>
+
+                        {message.active ? (
+                          <DeactivateSystemMessageButton
+                            id={message.id}
+                            title={message.title}
+                          />
+                        ) : null}
+                      </div>
+
+                      <details className="rounded-xl border border-slate-200 bg-white/70">
+                        <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-slate-700 [&::-webkit-details-marker]:hidden">
+                          Aanpassen…
+                        </summary>
+
+                        <div className="border-t border-slate-200 p-4">
+                          <SystemMessageForm
+                            mode="edit"
+                            id={message.id}
+                            initialTitle={message.title}
+                            initialMessage={message.message}
+                            initialSeverity={message.severity}
+                            initialTargetDepot={message.targetDepot}
+                            initialActive={message.active}
+                            initialActiveFrom={formatDateForInput(
+                              message.activeFrom
+                            )}
+                            initialActiveUntil={formatDateForInput(
+                              message.activeUntil
+                            )}
+                          />
+                        </div>
+                      </details>
                     </div>
-
-                    <p className="mt-2 text-xs text-slate-400">
-                      Aangemaakt door: {message.createdBy ?? "Onbekend"} ·
-                      Aangemaakt op: {formatDate(message.createdAt)}
-                    </p>
                   </div>
-
-                  {message.active ? (
-                    <DeactivateSystemMessageButton
-                      id={message.id}
-                      title={message.title}
-                    />
-                  ) : null}
                 </div>
-
-                <details className="rounded-xl border border-slate-200 bg-white/70">
-                  <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-slate-700 [&::-webkit-details-marker]:hidden">
-                    Aanpassen…
-                  </summary>
-
-                  <div className="border-t border-slate-200 p-4">
-                    <SystemMessageForm
-                      mode="edit"
-                      id={message.id}
-                      initialTitle={message.title}
-                      initialMessage={message.message}
-                      initialSeverity={message.severity}
-                      initialTargetDepot={message.targetDepot}
-                      initialActive={message.active}
-                      initialActiveFrom={formatDateForInput(message.activeFrom)}
-                      initialActiveUntil={formatDateForInput(
-                        message.activeUntil
-                      )}
-                    />
-                  </div>
-                </details>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
