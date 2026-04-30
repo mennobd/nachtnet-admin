@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { logEvent } from "@/lib/logger";
 
 const severityRank: Record<string, number> = {
   CRITICAL: 1,
@@ -43,8 +44,15 @@ export async function GET(request: Request) {
             }
           : {}),
       },
-      orderBy: {
-        createdAt: "desc",
+      select: {
+        id: true,
+        title: true,
+        message: true,
+        severity: true,
+        targetDepot: true,
+        activeFrom: true,
+        activeUntil: true,
+        createdAt: true,
       },
     });
 
@@ -58,6 +66,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       generatedAt: new Date().toISOString(),
+      depot: depot ?? "ALL",
       count: sortedMessages.length,
       messages: sortedMessages.map((message) => ({
         id: message.id,
@@ -70,7 +79,13 @@ export async function GET(request: Request) {
       })),
     });
   } catch (error) {
-    console.error("ACTIVE SYSTEM MESSAGES ERROR:", error);
+    logEvent(
+      "SYSTEM_MESSAGES_ACTIVE_FETCH_FAILED",
+      {
+        error: error instanceof Error ? error.message : "Onbekende fout",
+      },
+      "ERROR"
+    );
 
     return NextResponse.json(
       { error: "SystemMessages konden niet worden geladen." },
