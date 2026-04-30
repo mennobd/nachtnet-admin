@@ -61,6 +61,17 @@ export async function PATCH(
     const { id } = await context.params;
     const body = await request.json();
 
+    const previous = await prisma.systemMessage.findUnique({
+      where: { id },
+    });
+
+    if (!previous) {
+      return NextResponse.json(
+        { error: "SystemMessage niet gevonden." },
+        { status: 404 }
+      );
+    }
+
     const title = String(body.title ?? "").trim();
     const message = String(body.message ?? "").trim();
     const severity = normalizeSeverity(body.severity);
@@ -100,22 +111,36 @@ export async function PATCH(
       entity: "systemMessage",
       entityId: updated.id,
       metadata: {
-        title: updated.title,
-        severity: updated.severity,
-        targetDepot: updated.targetDepot,
-        active: updated.active,
-        activeFrom: updated.activeFrom,
-        activeUntil: updated.activeUntil,
+        previous: {
+          title: previous.title,
+          message: previous.message,
+          severity: previous.severity,
+          targetDepot: previous.targetDepot,
+          active: previous.active,
+          activeFrom: previous.activeFrom,
+          activeUntil: previous.activeUntil,
+        },
+        updated: {
+          title: updated.title,
+          message: updated.message,
+          severity: updated.severity,
+          targetDepot: updated.targetDepot,
+          active: updated.active,
+          activeFrom: updated.activeFrom,
+          activeUntil: updated.activeUntil,
+        },
         performedBy: user.email,
       },
     });
 
     logEvent("SYSTEM_MESSAGE_UPDATED", {
       id: updated.id,
-      title: updated.title,
-      severity: updated.severity,
-      targetDepot: updated.targetDepot,
-      active: updated.active,
+      previousSeverity: previous.severity,
+      newSeverity: updated.severity,
+      previousDepot: previous.targetDepot,
+      newDepot: updated.targetDepot,
+      previousActive: previous.active,
+      newActive: updated.active,
       updatedBy: user.email,
     });
 
@@ -153,6 +178,17 @@ export async function DELETE(
   try {
     const { id } = await context.params;
 
+    const previous = await prisma.systemMessage.findUnique({
+      where: { id },
+    });
+
+    if (!previous) {
+      return NextResponse.json(
+        { error: "SystemMessage niet gevonden." },
+        { status: 404 }
+      );
+    }
+
     const updated = await prisma.systemMessage.update({
       where: { id },
       data: {
@@ -165,9 +201,17 @@ export async function DELETE(
       entity: "systemMessage",
       entityId: updated.id,
       metadata: {
-        title: updated.title,
-        severity: updated.severity,
-        targetDepot: updated.targetDepot,
+        previous: {
+          title: previous.title,
+          severity: previous.severity,
+          targetDepot: previous.targetDepot,
+          active: previous.active,
+          activeFrom: previous.activeFrom,
+          activeUntil: previous.activeUntil,
+        },
+        updated: {
+          active: updated.active,
+        },
         performedBy: user.email,
       },
     });
@@ -177,6 +221,8 @@ export async function DELETE(
       title: updated.title,
       severity: updated.severity,
       targetDepot: updated.targetDepot,
+      previousActive: previous.active,
+      newActive: updated.active,
       deactivatedBy: user.email,
     });
 
