@@ -8,6 +8,8 @@ import {
 import { prisma } from "@/lib/db";
 import { getRequiredMutationUser } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
+import { logEvent } from "@/lib/logger";
+import { validateSystemMessage } from "@/lib/system-message-validator";
 
 function normalizeSeverity(value: unknown): SystemMessageSeverity {
   if (value === "CRITICAL") return "CRITICAL";
@@ -67,25 +69,17 @@ export async function PATCH(
     const activeFrom = parseDateOrNow(body.activeFrom);
     const activeUntil = parseOptionalDate(body.activeUntil);
 
-    if (!title || !message) {
-      return NextResponse.json(
-        { error: "Titel en bericht zijn verplicht." },
-        { status: 400 }
-      );
-    }
+    const validationError = validateSystemMessage({
+      title,
+      message,
+      severity,
+      targetDepot,
+      activeFrom,
+      activeUntil,
+    });
 
-    if (!activeFrom) {
-      return NextResponse.json(
-        { error: "Actief vanaf is ongeldig." },
-        { status: 400 }
-      );
-    }
-
-    if (activeUntil && activeUntil < activeFrom) {
-      return NextResponse.json(
-        { error: "Actief tot mag niet vóór actief vanaf liggen." },
-        { status: 400 }
-      );
+    if (validationError) {
+      return NextResponse.json({ error: validationError }, { status: 400 });
     }
 
     const updated = await prisma.systemMessage.update({
@@ -96,7 +90,7 @@ export async function PATCH(
         severity,
         targetDepot,
         active,
-        activeFrom,
+        activeFrom: activeFrom!,
         activeUntil,
       },
     });
@@ -116,9 +110,25 @@ export async function PATCH(
       },
     });
 
+    logEvent("SYSTEM_MESSAGE_UPDATED", {
+      id: updated.id,
+      title: updated.title,
+      severity: updated.severity,
+      targetDepot: updated.targetDepot,
+      active: updated.active,
+      updatedBy: user.email,
+    });
+
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("UPDATE SYSTEM MESSAGE ERROR:", error);
+    logEvent(
+      "SYSTEM_MESSAGE_UPDATE_FAILED",
+      {
+        error: error instanceof Error ? error.message : "Onbekende fout",
+        performedBy: user.email,
+      },
+      "ERROR"
+    );
 
     return NextResponse.json(
       { error: "SystemMessage bijwerken mislukt." },
@@ -162,9 +172,24 @@ export async function DELETE(
       },
     });
 
+    logEvent("SYSTEM_MESSAGE_DEACTIVATED", {
+      id: updated.id,
+      title: updated.title,
+      severity: updated.severity,
+      targetDepot: updated.targetDepot,
+      deactivatedBy: user.email,
+    });
+
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("DEACTIVATE SYSTEM MESSAGE ERROR:", error);
+    logEvent(
+      "SYSTEM_MESSAGE_DEACTIVATE_FAILED",
+      {
+        error: error instanceof Error ? error.message : "Onbekende fout",
+        performedBy: user.email,
+      },
+      "ERROR"
+    );
 
     return NextResponse.json(
       { error: "SystemMessage deactiveren mislukt." },
