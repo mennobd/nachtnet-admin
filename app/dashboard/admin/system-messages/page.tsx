@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { prisma } from "@/lib/db";
 import { getRequiredMutationUser } from "@/lib/auth";
 import SystemMessageForm from "@/components/SystemMessageForm";
