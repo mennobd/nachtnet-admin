@@ -8,6 +8,7 @@ type TargetDepot = "ALL" | "ZUID" | "KLEIWEG" | "NACHTNET";
 
 type Props = {
   mode: "create" | "edit";
+  variant?: "default" | "critical";
   id?: string;
   initialTitle?: string;
   initialMessage?: string;
@@ -18,8 +19,17 @@ type Props = {
   initialActiveUntil?: string;
 };
 
+function getFormClasses(variant: "default" | "critical") {
+  if (variant === "critical") {
+    return "space-y-4 rounded-xl border border-red-200 bg-white p-4";
+  }
+
+  return "space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4";
+}
+
 export default function SystemMessageForm({
   mode,
+  variant = "default",
   id,
   initialTitle = "",
   initialMessage = "",
@@ -89,8 +99,8 @@ export default function SystemMessageForm({
       if (mode === "create") {
         setTitle("");
         setMessage("");
-        setSeverity("INFO");
-        setTargetDepot("ALL");
+        setSeverity(variant === "critical" ? "CRITICAL" : "INFO");
+        setTargetDepot(variant === "critical" ? "ALL" : "ALL");
         setActive(true);
         setActiveFrom("");
         setActiveUntil("");
@@ -105,10 +115,7 @@ export default function SystemMessageForm({
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4"
-    >
+    <form onSubmit={handleSubmit} className={getFormClasses(variant)}>
       <div className="grid gap-4 md:grid-cols-2">
         <div className="md:col-span-2">
           <label className="mb-2 block text-sm font-medium text-slate-700">
@@ -118,7 +125,11 @@ export default function SystemMessageForm({
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
-            placeholder="Bijv. Calamiteit Erasmusbrug"
+            placeholder={
+              variant === "critical"
+                ? "Bijv. Calamiteit Erasmusbrug"
+                : "Bijv. Werkzaamheden nachtnet N02"
+            }
             required
           />
         </div>
@@ -131,7 +142,11 @@ export default function SystemMessageForm({
             value={message}
             onChange={(event) => setMessage(event.target.value)}
             className="min-h-28 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
-            placeholder="Schrijf hier het bericht dat in de app zichtbaar moet worden."
+            placeholder={
+              variant === "critical"
+                ? "Omschrijf kort en duidelijk wat chauffeurs direct moeten weten."
+                : "Schrijf hier het bericht dat in de app zichtbaar moet worden."
+            }
             required
           />
         </div>
@@ -149,6 +164,9 @@ export default function SystemMessageForm({
             <option value="WARNING">WARNING</option>
             <option value="CRITICAL">CRITICAL</option>
           </select>
+          <p className="mt-1 text-xs text-slate-500">
+            CRITICAL komt altijd bovenaan in de app.
+          </p>
         </div>
 
         <div>
@@ -167,6 +185,9 @@ export default function SystemMessageForm({
             <option value="KLEIWEG">KLEIWEG</option>
             <option value="NACHTNET">NACHTNET</option>
           </select>
+          <p className="mt-1 text-xs text-slate-500">
+            ALL is zichtbaar voor alle vestigingen.
+          </p>
         </div>
 
         <div>
@@ -213,6 +234,9 @@ export default function SystemMessageForm({
             />
             Bericht actief
           </label>
+          <p className="mt-1 text-xs text-slate-500">
+            Alleen actieve berichten kunnen door de app worden opgehaald.
+          </p>
         </div>
       </div>
 
@@ -231,10 +255,16 @@ export default function SystemMessageForm({
       <button
         type="submit"
         disabled={loading}
-        className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+        className={`rounded-xl px-4 py-3 text-sm font-medium text-white disabled:opacity-60 ${
+          variant === "critical"
+            ? "bg-red-700 hover:bg-red-800"
+            : "bg-slate-900 hover:bg-slate-800"
+        }`}
       >
         {loading
           ? "Opslaan..."
+          : mode === "create" && variant === "critical"
+          ? "CRITICAL bericht direct aanmaken"
           : mode === "create"
           ? "Bericht aanmaken"
           : "Wijzigingen opslaan"}
