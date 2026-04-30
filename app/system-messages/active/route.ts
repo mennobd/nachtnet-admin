@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
+import { SystemMessageTargetDepot } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { logEvent } from "@/lib/logger";
 
@@ -10,12 +11,12 @@ const severityRank: Record<string, number> = {
   INFO: 3,
 };
 
-function normalizeDepot(value: string | null) {
+function normalizeDepot(value: string | null): SystemMessageTargetDepot | null {
   const depot = String(value ?? "").toUpperCase();
 
-  if (depot === "ZUID") return "ZUID";
-  if (depot === "KLEIWEG") return "KLEIWEG";
-  if (depot === "NACHTNET") return "NACHTNET";
+  if (depot === "ZUID") return SystemMessageTargetDepot.ZUID;
+  if (depot === "KLEIWEG") return SystemMessageTargetDepot.KLEIWEG;
+  if (depot === "NACHTNET") return SystemMessageTargetDepot.NACHTNET;
 
   return null;
 }
@@ -39,7 +40,7 @@ export async function GET(request: Request) {
         ...(depot
           ? {
               targetDepot: {
-                in: ["ALL", depot],
+                in: [SystemMessageTargetDepot.ALL, depot],
               },
             }
           : {}),
@@ -66,7 +67,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       generatedAt: new Date().toISOString(),
-      depot: depot ?? "ALL",
+      depot: depot ?? SystemMessageTargetDepot.ALL,
       count: sortedMessages.length,
       messages: sortedMessages.map((message) => ({
         id: message.id,
@@ -79,16 +80,24 @@ export async function GET(request: Request) {
       })),
     });
   } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Onbekende fout";
+
+    console.error("ACTIVE SYSTEM MESSAGES ERROR:", error);
+
     logEvent(
       "SYSTEM_MESSAGES_ACTIVE_FETCH_FAILED",
       {
-        error: error instanceof Error ? error.message : "Onbekende fout",
+        error: errorMessage,
       },
       "ERROR"
     );
 
     return NextResponse.json(
-      { error: "SystemMessages konden niet worden geladen." },
+      {
+        error: "SystemMessages konden niet worden geladen.",
+        details: errorMessage,
+      },
       { status: 500 }
     );
   }
