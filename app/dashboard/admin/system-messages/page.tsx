@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getRequiredMutationUser } from "@/lib/auth";
 import SystemMessageForm from "@/components/SystemMessageForm";
 import DeactivateSystemMessageButton from "@/components/DeactivateSystemMessageButton";
+import DeleteSystemMessageButton from "@/components/DeleteSystemMessageButton";
 
 const severityRank: Record<string, number> = {
   CRITICAL: 1,
@@ -280,12 +281,19 @@ export default async function SystemMessagesPage() {
                           </p>
                         </div>
 
-                        {message.active ? (
-                          <DeactivateSystemMessageButton
-                            id={message.id}
-                            title={message.title}
-                          />
-                        ) : null}
+                        <div className="flex flex-col items-end gap-2">
+                          {message.active ? (
+                            <DeactivateSystemMessageButton
+                              id={message.id}
+                              title={message.title}
+                            />
+                          ) : (
+                            <DeleteSystemMessageButton
+                              id={message.id}
+                              title={message.title}
+                            />
+                          )}
+                        </div>
                       </div>
 
                       <details className="rounded-xl border border-slate-200 bg-white/70">
