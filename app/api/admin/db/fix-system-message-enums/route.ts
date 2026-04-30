@@ -10,7 +10,7 @@ export async function GET() {
   try {
     await prisma.$executeRawUnsafe(`
       DO $$ BEGIN
-        CREATE TYPE "public"."SystemMessageSeverity" AS ENUM ('INFO', 'WARNING', 'CRITICAL');
+        CREATE TYPE "SystemMessageSeverity" AS ENUM ('INFO', 'WARNING', 'CRITICAL');
       EXCEPTION
         WHEN duplicate_object THEN null;
       END $$;
@@ -18,7 +18,7 @@ export async function GET() {
 
     await prisma.$executeRawUnsafe(`
       DO $$ BEGIN
-        CREATE TYPE "public"."SystemMessageTargetDepot" AS ENUM ('ALL', 'ZUID', 'KLEIWEG', 'NACHTNET');
+        CREATE TYPE "SystemMessageTargetDepot" AS ENUM ('ALL', 'ZUID', 'KLEIWEG', 'NACHTNET');
       EXCEPTION
         WHEN duplicate_object THEN null;
       END $$;
@@ -26,15 +26,56 @@ export async function GET() {
 
     await prisma.$executeRawUnsafe(`
       ALTER TABLE "SystemMessage"
+      ALTER COLUMN "severity" DROP DEFAULT;
+    `);
+
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "SystemMessage"
+      ALTER COLUMN "targetDepot" DROP DEFAULT;
+    `);
+
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "SystemMessage"
       ALTER COLUMN "severity"
-      TYPE "public"."SystemMessageSeverity"
-      USING "severity"::"public"."SystemMessageSeverity";
+      TYPE "SystemMessageSeverity"
+      USING "severity"::text::"SystemMessageSeverity";
     `);
 
     await prisma.$executeRawUnsafe(`
       ALTER TABLE "SystemMessage"
       ALTER COLUMN "targetDepot"
-      TYPE "public"."SystemMessageTargetDepot"
+      TYPE "SystemMessageTargetDepot"
+      USING "targetDepot"::text::"SystemMessageTargetDepot";
+    `);
+
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "SystemMessage"
+      ALTER COLUMN "severity"
+      SET DEFAULT 'INFO'::"SystemMessageSeverity";
+    `);
+
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "SystemMessage"
+      ALTER COLUMN "targetDepot"
+      SET DEFAULT 'ALL'::"SystemMessageTargetDepot";
+    `);
+
+    return NextResponse.json({
+      success: true,
+      message: "SystemMessage enums hersteld.",
+    });
+  } catch (error) {
+    console.error("FIX SYSTEM MESSAGE ENUMS ERROR:", error);
+
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error ? error.message : "Enum herstel mislukt.",
+      },
+      { status: 500 }
+    );
+  }
+}      TYPE "public"."SystemMessageTargetDepot"
       USING "targetDepot"::"public"."SystemMessageTargetDepot";
     `);
 
