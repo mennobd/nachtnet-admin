@@ -21,11 +21,30 @@ function normalizeDepot(value: string | null): SystemMessageTargetDepot | null {
   return null;
 }
 
+function emptyFallbackResponse(depot: SystemMessageTargetDepot | null) {
+  return NextResponse.json(
+    {
+      status: "fallback",
+      generatedAt: new Date().toISOString(),
+      depot: depot ?? SystemMessageTargetDepot.ALL,
+      count: 0,
+      messages: [],
+    },
+    {
+      status: 200,
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+      },
+    }
+  );
+}
+
 export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const depot = normalizeDepot(url.searchParams.get("depot"));
+
   try {
     const now = new Date();
-    const url = new URL(request.url);
-    const depot = normalizeDepot(url.searchParams.get("depot"));
 
     const messages = await prisma.systemMessage.findMany({
       where: {
@@ -65,20 +84,28 @@ export async function GET(request: Request) {
       return b.createdAt.getTime() - a.createdAt.getTime();
     });
 
-    return NextResponse.json({
-      generatedAt: new Date().toISOString(),
-      depot: depot ?? SystemMessageTargetDepot.ALL,
-      count: sortedMessages.length,
-      messages: sortedMessages.map((message) => ({
-        id: message.id,
-        title: message.title,
-        message: message.message,
-        severity: message.severity,
-        targetDepot: message.targetDepot,
-        activeFrom: message.activeFrom,
-        activeUntil: message.activeUntil,
-      })),
-    });
+    return NextResponse.json(
+      {
+        status: "ok",
+        generatedAt: new Date().toISOString(),
+        depot: depot ?? SystemMessageTargetDepot.ALL,
+        count: sortedMessages.length,
+        messages: sortedMessages.map((message) => ({
+          id: message.id,
+          title: message.title,
+          message: message.message,
+          severity: message.severity,
+          targetDepot: message.targetDepot,
+          activeFrom: message.activeFrom,
+          activeUntil: message.activeUntil,
+        })),
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+        },
+      }
+    );
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Onbekende fout";
@@ -88,17 +115,12 @@ export async function GET(request: Request) {
     logEvent(
       "SYSTEM_MESSAGES_ACTIVE_FETCH_FAILED",
       {
+        depot: depot ?? "ALL",
         error: errorMessage,
       },
       "ERROR"
     );
 
-    return NextResponse.json(
-      {
-        error: "SystemMessages konden niet worden geladen.",
-        details: errorMessage,
-      },
-      { status: 500 }
-    );
+    return emptyFallbackResponse(depot);
   }
 }
