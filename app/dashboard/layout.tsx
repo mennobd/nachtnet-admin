@@ -26,7 +26,12 @@ export default async function DashboardLayout({
       { href: "/dashboard/releases", label: "Releases" },
       { href: "/dashboard/auditlog", label: "Auditlog" },
     ];
-  
+    if (user.role !== "VIEWER") {
+      baseItems.push({
+        href: "/dashboard/admin/system-messages",
+        label: "Push berichten",
+      });
+    }
     if (user.role === "ADMIN" || user.role === "ORG_ADMIN") {
       baseItems.push({
         href: "/dashboard/admin/users",
