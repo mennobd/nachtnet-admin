@@ -25,6 +25,10 @@ export async function PATCH(
       );
     }
 
+    if (password.length > 128) {
+      return NextResponse.json({ error: "Wachtwoord mag maximaal 128 tekens bevatten." }, { status: 400 });
+    }
+
     const targetUser = await prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -62,7 +66,7 @@ export async function PATCH(
       }
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 12);
 
     const user = await prisma.user.update({
       where: { id: userId },

@@ -35,6 +35,13 @@ export async function PATCH(
       );
     }
 
+    if (name.length > 100) {
+      return NextResponse.json({ error: "Naam mag maximaal 100 tekens bevatten." }, { status: 400 });
+    }
+    if (email.length > 255) {
+      return NextResponse.json({ error: "E-mailadres mag maximaal 255 tekens bevatten." }, { status: 400 });
+    }
+
     const targetUser = await prisma.user.findUnique({
       where: { id: userId },
       select: {

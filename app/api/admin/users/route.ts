@@ -58,6 +58,16 @@ export async function POST(request: Request) {
       );
     }
 
+    if (name.length > 100) {
+      return NextResponse.json({ error: "Naam mag maximaal 100 tekens bevatten." }, { status: 400 });
+    }
+    if (email.length > 255) {
+      return NextResponse.json({ error: "E-mailadres mag maximaal 255 tekens bevatten." }, { status: 400 });
+    }
+    if (password.length > 128) {
+      return NextResponse.json({ error: "Wachtwoord mag maximaal 128 tekens bevatten." }, { status: 400 });
+    }
+
     const organization = await prisma.organization.findUnique({
       where: { id: organizationId },
       select: { id: true, name: true },
@@ -82,7 +92,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 12);
 
     const user = await prisma.user.create({
       data: {

@@ -1,21 +1,27 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { writeAuditLog } from "@/lib/audit";
-import { getRequiredMutationUser } from "@/lib/auth";
+import { apiMutationUser } from "@/lib/auth";
 import { validateManifestEntryForPublish } from "@/lib/release-validation";
+
+function getPriorityForCategory(category: string | null | undefined) {
+  switch (category) {
+    case "CALAMITEIT":
+      return 10;
+    case "OMLEIDING":
+      return 50;
+    default:
+      return 100;
+  }
+}
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ entryId: string }> }
 ) {
-  const user = await getRequiredMutationUser();
-
-  if (!user) {
-    return NextResponse.json(
-      { error: "Geen rechten voor deze actie." },
-      { status: 403 }
-    );
-  }
+  const auth = await apiMutationUser();
+  if (auth instanceof NextResponse) return auth;
+  const user = auth;
 
   try {
     const { entryId } = await params;
@@ -47,6 +53,9 @@ export async function POST(
       );
     }
 
+    const category = targetEntry.file?.category ?? "REGULIER";
+    const priority = getPriorityForCategory(category);
+
     await prisma.manifestEntry.updateMany({
       where: {
         routeId: targetEntry.routeId,
@@ -62,7 +71,7 @@ export async function POST(
         isPublished: true,
         activeFrom: new Date(),
         activeUntil: null,
-        priority: 1,
+        priority,
       },
       include: {
         route: true,
@@ -78,7 +87,9 @@ export async function POST(
         routeId: rolledBackEntry.routeId,
         routeCode: rolledBackEntry.route?.routeCode ?? null,
         fileName: rolledBackEntry.file?.fileName ?? null,
+        fileCategory: category,
         version: rolledBackEntry.version,
+        priority,
         performedBy: user.email,
       },
     });

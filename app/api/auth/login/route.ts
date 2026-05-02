@@ -29,7 +29,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = await request.json();
+    let body: { email?: unknown; password?: unknown };
+    try {
+      body = await request.json();
+    } catch {
+      consumeRateLimit(`login:ip:${ip}`, IP_LIMIT);
+      return NextResponse.json(
+        { error: "Ongeldig verzoek." },
+        { status: 400 }
+      );
+    }
 
     const email = String(body.email ?? "").trim().toLowerCase();
     const password = String(body.password ?? "");

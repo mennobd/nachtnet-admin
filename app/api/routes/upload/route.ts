@@ -120,9 +120,13 @@ export async function POST(request: Request) {
 
     const checksum = crypto.createHash("sha256").update(buffer).digest("hex");
 
-    const fileName = file.name;
+    const sanitizedFileName = file.name
+      .replace(/[^a-zA-Z0-9._-]/g, "_")
+      .replace(/\.{2,}/g, "_")
+      .slice(0, 200) || "bestand";
+    const fileName = sanitizedFileName;
     const version = `1.0.${checksum.slice(0, 8)}`;
-    const storageKey = `routes/${routeId}/${Date.now()}-${fileName}`;
+    const storageKey = `routes/${routeId}/${checksum.slice(0, 16)}-${fileName}`;
     const priority = getPriorityForCategory(category);
 
     await s3.send(

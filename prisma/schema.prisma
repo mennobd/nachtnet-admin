@@ -67,6 +67,9 @@ model AuditLog {
 
   userId    String?
   user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
 }
 
 model Route {

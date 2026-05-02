@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { writeAuditLog } from "@/lib/audit";
-import { getRequiredMutationUser } from "@/lib/auth";
+import { apiUser, apiMutationUser } from "@/lib/auth";
 
 // GET → alle routes ophalen
 export async function GET() {
+  const auth = await apiUser();
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const routes = await prisma.route.findMany({
       orderBy: { createdAt: "desc" },
@@ -23,15 +26,11 @@ export async function GET() {
 
 // POST → nieuwe route aanmaken
 export async function POST(request: Request) {
-  try {
-    const user = await getRequiredMutationUser();
+  const auth = await apiMutationUser();
+  if (auth instanceof NextResponse) return auth;
+  const user = auth;
 
-if (!user) {
-  return NextResponse.json(
-    { error: "Geen rechten voor deze actie." },
-    { status: 403 }
-  );
-}
+  try {
     const body = await request.json();
 
     const {
@@ -56,6 +55,25 @@ if (!user) {
         { error: "Verplichte velden ontbreken" },
         { status: 400 }
       );
+    }
+
+    if (routeCode.length > 20) {
+      return NextResponse.json({ error: "RouteCode mag maximaal 20 tekens bevatten." }, { status: 400 });
+    }
+    if (title.length > 200) {
+      return NextResponse.json({ error: "Titel mag maximaal 200 tekens bevatten." }, { status: 400 });
+    }
+    if (lineNumber.length > 10) {
+      return NextResponse.json({ error: "Lijnnummer mag maximaal 10 tekens bevatten." }, { status: 400 });
+    }
+    if (direction.length > 100) {
+      return NextResponse.json({ error: "Richting mag maximaal 100 tekens bevatten." }, { status: 400 });
+    }
+    if (depot.length > 100) {
+      return NextResponse.json({ error: "Depot mag maximaal 100 tekens bevatten." }, { status: 400 });
+    }
+    if (notes && String(notes).length > 500) {
+      return NextResponse.json({ error: "Notities mogen maximaal 500 tekens bevatten." }, { status: 400 });
     }
 
     const route = await prisma.route.create({
