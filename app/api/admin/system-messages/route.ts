@@ -6,7 +6,7 @@ import {
   SystemMessageTargetDepot,
 } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { apiAdminOrOrgAdmin } from "@/lib/auth";
+import { apiSystemMessageUser } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 import { logEvent } from "@/lib/logger";
 import { validateSystemMessage } from "@/lib/system-message-validator";
@@ -45,7 +45,7 @@ function parseOptionalDate(value: unknown) {
 }
 
 export async function GET() {
-  const user = await apiAdminOrOrgAdmin();
+  const user = await apiSystemMessageUser();
   if (user instanceof NextResponse) return user;
 
   const messages = await prisma.systemMessage.findMany({
@@ -56,7 +56,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const user = await apiAdminOrOrgAdmin();
+  const user = await apiSystemMessageUser();
   if (user instanceof NextResponse) return user;
 
   try {

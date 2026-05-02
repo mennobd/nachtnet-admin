@@ -12,7 +12,7 @@ export default async function DashboardLayout({
 }) {
   const user = await requireUser();
 
-  const [pendingRequestCount, pendingChangeRequestCount, unreadNotificationCount] = await Promise.all([
+  const [pendingRequestCount, pendingChangeRequestCount, unreadNotificationCount, userOrgName] = await Promise.all([
     user.role === "ADMIN"
       ? prisma.userApprovalRequest.count({ where: { status: "PENDING" } })
       : Promise.resolve(0),
@@ -32,6 +32,12 @@ export default async function DashboardLayout({
         })
       : Promise.resolve(0),
     prisma.notification.count({ where: { userId: user.id, read: false } }),
+    user.organizationId
+      ? prisma.organization.findUnique({
+          where: { id: user.organizationId },
+          select: { name: true },
+        }).then((o) => o?.name ?? null)
+      : Promise.resolve(null),
   ]);
 
   function getNavItems() {
@@ -42,7 +48,7 @@ export default async function DashboardLayout({
       { href: "/dashboard/releases", label: "Releases" },
       { href: "/dashboard/auditlog", label: "Auditlog" },
     ];
-    if (user.role !== "VIEWER") {
+    if (user.role !== "VIEWER" || userOrgName === "AFD-NaCo") {
       baseItems.push({
         href: "/dashboard/admin/system-messages",
         label: "Push berichten",

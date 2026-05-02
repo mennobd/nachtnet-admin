@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { apiAdminOrOrgAdmin } from "@/lib/auth";
+import { apiSystemMessageUser } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 import { logEvent } from "@/lib/logger";
 
@@ -10,7 +10,7 @@ export async function DELETE(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const user = await apiAdminOrOrgAdmin();
+  const user = await apiSystemMessageUser();
   if (user instanceof NextResponse) return user;
 
   try {

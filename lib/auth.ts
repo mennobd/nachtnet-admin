@@ -208,3 +208,25 @@ export async function apiMutationUser(): Promise<SessionUser | NextResponse> {
 
   return auth;
 }
+
+// EDITORs and above may manage system messages; VIEWERs in AFD-NaCo are also allowed.
+export async function apiSystemMessageUser(): Promise<SessionUser | NextResponse> {
+  const auth = await apiUser();
+
+  if (auth instanceof NextResponse) return auth;
+
+  if (auth.role !== "VIEWER") return auth;
+
+  if (auth.organizationId) {
+    const org = await prisma.organization.findUnique({
+      where: { id: auth.organizationId },
+      select: { name: true },
+    });
+    if (org?.name === "AFD-NaCo") return auth;
+  }
+
+  return NextResponse.json(
+    { error: "Geen rechten voor deze actie." },
+    { status: 403 }
+  );
+}

@@ -6,7 +6,7 @@ import {
   SystemMessageTargetDepot,
 } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { apiAdminOrOrgAdmin } from "@/lib/auth";
+import { apiSystemMessageUser } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 import { logEvent } from "@/lib/logger";
 import { validateSystemMessage } from "@/lib/system-message-validator";
@@ -48,7 +48,7 @@ export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const user = await apiAdminOrOrgAdmin();
+  const user = await apiSystemMessageUser();
   if (user instanceof NextResponse) return user;
 
   try {
@@ -160,7 +160,7 @@ export async function DELETE(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const user = await apiAdminOrOrgAdmin();
+  const user = await apiSystemMessageUser();
   if (user instanceof NextResponse) return user;
 
   try {
