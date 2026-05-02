@@ -1,21 +1,11 @@
+import Link from "next/link";
 import Image from "next/image";
-import LoginForm from "@/components/LoginForm";
-import { getCurrentUser } from "@/lib/auth";
-import { redirect } from "next/navigation";
 
-export default async function LoginPage() {
-  const user = await getCurrentUser();
-
-  if (user) {
-    redirect("/dashboard");
-  }
-
+export default function NotFound() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
       <div className="w-full max-w-sm">
-        {/* Card */}
         <div className="rounded-2xl bg-white shadow-sm border border-slate-200 overflow-hidden">
-          {/* Brand header */}
           <div className="border-b border-slate-100 px-8 py-7 text-center">
             <Image
               src="/bannerlogo.png"
@@ -29,16 +19,20 @@ export default async function LoginPage() {
               Routebeheer
             </p>
           </div>
-
-          {/* Form area */}
-          <div className="px-8 py-7">
-            <h1 className="mb-1 text-lg font-semibold text-slate-900">
-              Inloggen
+          <div className="px-8 py-8 text-center">
+            <p className="text-5xl font-bold text-slate-200">404</p>
+            <h1 className="mt-3 text-lg font-semibold text-slate-900">
+              Pagina niet gevonden
             </h1>
-            <p className="mb-6 text-sm text-slate-500">
-              Voer uw gegevens in om verder te gaan.
+            <p className="mt-2 text-sm text-slate-500">
+              De pagina die je zoekt bestaat niet of is verplaatst.
             </p>
-            <LoginForm />
+            <Link
+              href="/dashboard"
+              className="mt-6 inline-block rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-700 transition-colors"
+            >
+              Terug naar dashboard
+            </Link>
           </div>
         </div>
       </div>
