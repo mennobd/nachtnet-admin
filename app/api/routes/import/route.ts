@@ -16,20 +16,27 @@ const s3 = new S3Client({
   forcePathStyle: true,
 });
 
+function detectDelimiter(firstLine: string): string {
+  const semicolons = (firstLine.match(/;/g) ?? []).length;
+  const commas = (firstLine.match(/,/g) ?? []).length;
+  return semicolons >= commas ? ";" : ",";
+}
+
 function parseCSV(text: string): Record<string, string>[] {
   const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
   const nonEmpty = lines.filter((l) => l.trim() !== "");
   if (nonEmpty.length < 2) return [];
-  const headers = splitCSVLine(nonEmpty[0]).map((h) => h.trim().toLowerCase());
+  const delimiter = detectDelimiter(nonEmpty[0]);
+  const headers = splitCSVLine(nonEmpty[0], delimiter).map((h) => h.trim().toLowerCase());
   return nonEmpty.slice(1).map((line) => {
-    const values = splitCSVLine(line);
+    const values = splitCSVLine(line, delimiter);
     const row: Record<string, string> = {};
     headers.forEach((h, i) => { row[h] = (values[i] ?? "").trim(); });
     return row;
   });
 }
 
-function splitCSVLine(line: string): string[] {
+function splitCSVLine(line: string, delimiter = ","): string[] {
   const result: string[] = [];
   let current = "";
   let inQuotes = false;
@@ -38,7 +45,7 @@ function splitCSVLine(line: string): string[] {
     if (ch === '"') {
       if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
       else inQuotes = !inQuotes;
-    } else if (ch === "," && !inQuotes) {
+    } else if (ch === delimiter && !inQuotes) {
       result.push(current); current = "";
     } else {
       current += ch;
