@@ -10,6 +10,12 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* RET brand colors */
+  --color-ret-red: #E3001D;
+  --color-ret-red-dark: #C2001A;
+  --color-ret-navy: #1B3B6F;
+  --color-ret-navy-dark: #142D55;
 }
 
 @media (prefers-color-scheme: dark) {

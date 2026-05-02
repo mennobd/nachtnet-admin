@@ -120,7 +120,7 @@ export default async function ReleasesPage({
               name="q"
               defaultValue={params.q ?? ""}
               placeholder="Zoek op route, routecode, bestand of versie"
-              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-slate-500"
+              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-ret-red"
             />
           </div>
           <div>
@@ -128,7 +128,7 @@ export default async function ReleasesPage({
             <select
               name="status"
               defaultValue={statusFilter}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-slate-500"
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-ret-red"
             >
               <option value="alles">Alles</option>
               <option value="live">Live</option>
@@ -140,7 +140,7 @@ export default async function ReleasesPage({
           <div className="md:col-span-4 flex items-center gap-3">
             <button
               type="submit"
-              className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-700 transition-colors"
+              className="rounded-xl bg-ret-red px-4 py-2.5 text-sm font-medium text-white hover:bg-ret-red-dark transition-colors"
             >
               Filter toepassen
             </button>

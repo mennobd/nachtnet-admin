@@ -52,7 +52,7 @@ export default function ConfirmDialog({
             className={`rounded-xl px-4 py-2 text-sm font-medium text-white disabled:opacity-60 ${
               destructive
                 ? "bg-red-600 hover:bg-red-700"
-                : "bg-slate-900 hover:bg-slate-800"
+                : "bg-ret-red hover:bg-ret-red-dark"
             }`}
           >
             {loading ? "Bezig..." : confirmLabel}

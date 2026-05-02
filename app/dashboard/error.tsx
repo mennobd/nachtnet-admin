@@ -23,7 +23,7 @@ export default function DashboardError({
       </p>
       <button
         onClick={() => reset()}
-        className="mt-4 rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800"
+        className="mt-4 rounded-xl bg-ret-red px-4 py-3 text-sm font-medium text-white hover:bg-ret-red-dark"
       >
         Probeer opnieuw
       </button>

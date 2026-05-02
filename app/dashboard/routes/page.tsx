@@ -151,7 +151,7 @@ export default async function RoutesPage({
         action={
           <Link
             href="/dashboard/routes/new"
-            className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-700 transition-colors"
+            className="rounded-xl bg-ret-red px-4 py-2.5 text-sm font-medium text-white hover:bg-ret-red-dark transition-colors"
           >
             Nieuwe route
           </Link>
@@ -186,7 +186,7 @@ export default async function RoutesPage({
               name="q"
               defaultValue={params.q ?? ""}
               placeholder="Zoek op routecode of titel"
-              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-slate-500"
+              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-ret-red"
             />
           </div>
           <div>
@@ -194,7 +194,7 @@ export default async function RoutesPage({
             <select
               name="publication"
               defaultValue={publicationFilter}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-slate-500"
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-ret-red"
             >
               <option value="alles">Alles</option>
               <option value="live">Live</option>
@@ -208,7 +208,7 @@ export default async function RoutesPage({
             <select
               name="upload"
               defaultValue={uploadFilter}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-slate-500"
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-ret-red"
             >
               <option value="alles">Alles</option>
               <option value="met-upload">Met upload</option>
@@ -220,7 +220,7 @@ export default async function RoutesPage({
             <select
               name="depot"
               defaultValue={depotFilter}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-slate-500"
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-ret-red"
             >
               <option value="alles">Alles</option>
               <option value="Zuid">Zuid</option>
@@ -232,7 +232,7 @@ export default async function RoutesPage({
           <div className="md:col-span-5 flex items-center gap-3">
             <button
               type="submit"
-              className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-700 transition-colors"
+              className="rounded-xl bg-ret-red px-4 py-2.5 text-sm font-medium text-white hover:bg-ret-red-dark transition-colors"
             >
               Filter toepassen
             </button>
@@ -255,7 +255,7 @@ export default async function RoutesPage({
               !hasFilters ? (
                 <Link
                   href="/dashboard/routes/new"
-                  className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-700 transition-colors"
+                  className="rounded-xl bg-ret-red px-4 py-2.5 text-sm font-medium text-white hover:bg-ret-red-dark transition-colors"
                 >
                   Nieuwe route aanmaken
                 </Link>

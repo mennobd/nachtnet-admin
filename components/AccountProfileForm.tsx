@@ -48,7 +48,7 @@ export default function AccountProfileForm({
           value={name}
           onChange={(e) => setName(e.target.value)}
           maxLength={100}
-          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500"
+          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-ret-red"
           required
         />
       </div>
@@ -67,7 +67,7 @@ export default function AccountProfileForm({
       <button
         type="submit"
         disabled={loading || name.trim() === initialName}
-        className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+        className="rounded-xl bg-ret-red px-4 py-3 text-sm font-medium text-white hover:bg-ret-red-dark disabled:opacity-60"
       >
         {loading ? "Bezig..." : "Naam opslaan"}
       </button>

@@ -94,7 +94,7 @@ export default function PublishManifestEntryForm({
             type="datetime-local"
             value={activeFrom || ""}
             onChange={(e) => setActiveFrom(e.target.value)}
-            className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500 ${
+            className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-ret-red ${
               activeFrom ? "text-black" : "text-slate-400"
             }`}
           />
@@ -116,7 +116,7 @@ export default function PublishManifestEntryForm({
             type="datetime-local"
             value={activeUntil || ""}
             onChange={(e) => setActiveUntil(e.target.value)}
-            className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500 ${
+            className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-ret-red ${
               activeUntil ? "text-black" : "text-slate-400"
             }`}
           />
@@ -136,7 +136,7 @@ export default function PublishManifestEntryForm({
             id={`notes-${entryId}`}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-ret-red"
             placeholder="Bijv. Omleiding i.v.m. werkzaamheden Schiedam"
           />
           <p className="mt-1 text-xs text-slate-500">
@@ -170,7 +170,7 @@ export default function PublishManifestEntryForm({
         <button
           type="submit"
           disabled={loading}
-          className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+          className="rounded-xl bg-ret-red px-4 py-3 text-sm font-medium text-white hover:bg-ret-red-dark disabled:opacity-60"
         >
           {loading ? "Opslaan..." : "Publicatie opslaan"}
         </button>

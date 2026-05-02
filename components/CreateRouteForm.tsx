@@ -91,7 +91,7 @@ export default function CreateRouteForm() {
             value={form.routeCode}
             onChange={(e) => updateField("routeCode", e.target.value)}
             placeholder="Bijv. RET-NN-L12-ZUID"
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-ret-red"
             required
           />
           <p className="mt-1 text-xs text-slate-500">
@@ -112,7 +112,7 @@ export default function CreateRouteForm() {
             value={form.lineNumber}
             onChange={(e) => updateField("lineNumber", e.target.value)}
             placeholder="Bijv. 12"
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-ret-red"
             required
           />
           <p className="mt-1 text-xs text-slate-500">
@@ -133,7 +133,7 @@ export default function CreateRouteForm() {
             value={form.title}
             onChange={(e) => updateField("title", e.target.value)}
             placeholder="Bijv. Lijn 12 – Zuid → Centraal"
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-ret-red"
             required
           />
           <p className="mt-1 text-xs text-slate-500">
@@ -154,7 +154,7 @@ export default function CreateRouteForm() {
             value={form.direction}
             onChange={(e) => updateField("direction", e.target.value)}
             placeholder="Bijv. Zuid → Centraal"
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-ret-red"
             required
           />
           <p className="mt-1 text-xs text-slate-500">
@@ -173,7 +173,7 @@ export default function CreateRouteForm() {
             id="depot"
             value={form.depot}
             onChange={(e) => updateField("depot", e.target.value)}
-            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-ret-red"
             required
           >
             <option value="">Selecteer vestiging</option>
@@ -200,7 +200,7 @@ export default function CreateRouteForm() {
                     onChange={(e) =>
                       updateField("category", e.target.value as RouteCategory)
                     }
-                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-ret-red"
                     required
                   >
                     <option value="REGULIER">Regulier</option>
@@ -225,7 +225,7 @@ export default function CreateRouteForm() {
             onChange={(e) => updateField("notes", e.target.value)}
             placeholder="Bijv. Tijdelijke nachtroute i.v.m. werkzaamheden"
             rows={4}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-ret-red"
           />
           <p className="mt-1 text-xs text-slate-500">
             Gebruik dit veld voor bijzonderheden, afwijkingen of interne context.
@@ -249,7 +249,7 @@ export default function CreateRouteForm() {
         <button
           type="submit"
           disabled={loading}
-          className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+          className="rounded-xl bg-ret-red px-4 py-3 text-sm font-medium text-white hover:bg-ret-red-dark disabled:opacity-60"
         >
           {loading ? "Bezig met opslaan..." : "Route aanmaken"}
         </button>

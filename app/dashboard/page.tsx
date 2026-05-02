@@ -105,7 +105,7 @@ export default async function DashboardPage() {
             <a
               href="/api/manifest/live"
               download
-              className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-700 transition-colors"
+              className="rounded-xl bg-ret-red px-4 py-2.5 text-sm font-medium text-white hover:bg-ret-red-dark transition-colors"
             >
               Download manifest
             </a>

@@ -95,7 +95,7 @@ export default function EditRouteForm({
             type="text"
             value={form.title}
             onChange={(e) => update("title", e.target.value)}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-ret-red"
             required
           />
         </div>
@@ -106,7 +106,7 @@ export default function EditRouteForm({
             type="text"
             value={form.lineNumber}
             onChange={(e) => update("lineNumber", e.target.value)}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-ret-red"
             required
           />
         </div>
@@ -117,7 +117,7 @@ export default function EditRouteForm({
             type="text"
             value={form.direction}
             onChange={(e) => update("direction", e.target.value)}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-ret-red"
             required
           />
         </div>
@@ -127,7 +127,7 @@ export default function EditRouteForm({
           <select
             value={form.depot}
             onChange={(e) => update("depot", e.target.value)}
-            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-ret-red"
             required
           >
             <option value="Zuid">Zuid</option>
@@ -142,7 +142,7 @@ export default function EditRouteForm({
           <select
             value={form.category}
             onChange={(e) => update("category", e.target.value as RouteCategory)}
-            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-ret-red"
           >
             <option value="REGULIER">Regulier</option>
             <option value="OMLEIDING">Omleiding</option>
@@ -155,7 +155,7 @@ export default function EditRouteForm({
           <select
             value={form.status}
             onChange={(e) => update("status", e.target.value as RouteStatus)}
-            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-ret-red"
           >
             <option value="DRAFT">Concept</option>
             <option value="PUBLISHED">Gepubliceerd</option>
@@ -169,7 +169,7 @@ export default function EditRouteForm({
             value={form.notes}
             onChange={(e) => update("notes", e.target.value)}
             rows={3}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-ret-red"
           />
         </div>
       </div>
@@ -185,7 +185,7 @@ export default function EditRouteForm({
         <button
           type="submit"
           disabled={loading || !isDirty}
-          className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+          className="rounded-xl bg-ret-red px-4 py-3 text-sm font-medium text-white hover:bg-ret-red-dark disabled:opacity-50"
         >
           {loading ? "Bezig met opslaan…" : "Wijzigingen opslaan"}
         </button>

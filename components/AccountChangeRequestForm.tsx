@@ -61,7 +61,7 @@ export default function AccountChangeRequestForm({
             setType(e.target.value as "EMAIL" | "ROLE");
             setRequestedValue("");
           }}
-          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-slate-500"
+          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-ret-red"
         >
           <option value="EMAIL">E-mailadres</option>
           <option value="ROLE">Rol</option>
@@ -79,14 +79,14 @@ export default function AccountChangeRequestForm({
             onChange={(e) => setRequestedValue(e.target.value)}
             placeholder={`Huidig: ${currentEmail}`}
             maxLength={255}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-ret-red"
             required
           />
         ) : (
           <select
             value={requestedValue}
             onChange={(e) => setRequestedValue(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-ret-red"
             required
           >
             <option value="">Kies een rol…</option>
@@ -112,7 +112,7 @@ export default function AccountChangeRequestForm({
           rows={3}
           maxLength={500}
           placeholder="Licht je verzoek toe…"
-          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500"
+          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-ret-red"
         />
       </div>
 
@@ -130,7 +130,7 @@ export default function AccountChangeRequestForm({
       <button
         type="submit"
         disabled={loading}
-        className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+        className="rounded-xl bg-ret-red px-4 py-3 text-sm font-medium text-white hover:bg-ret-red-dark disabled:opacity-60"
       >
         {loading ? "Bezig..." : "Verzoek indienen"}
       </button>

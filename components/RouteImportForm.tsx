@@ -105,7 +105,7 @@ export default function RouteImportForm() {
       <button
         type="submit"
         disabled={loading}
-        className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+        className="rounded-xl bg-ret-red px-4 py-3 text-sm font-medium text-white hover:bg-ret-red-dark disabled:opacity-50"
       >
         {loading ? "Bezig met importeren…" : "Importeren"}
       </button>

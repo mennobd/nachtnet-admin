@@ -15,7 +15,7 @@ export default function NotFound() {
               priority
               className="mx-auto h-auto w-auto max-w-full"
             />
-            <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-slate-400">
+            <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-ret-red">
               Routebeheer
             </p>
           </div>
@@ -29,7 +29,7 @@ export default function NotFound() {
             </p>
             <Link
               href="/dashboard"
-              className="mt-6 inline-block rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-700 transition-colors"
+              className="mt-6 inline-block rounded-xl bg-ret-red px-5 py-2.5 text-sm font-medium text-white hover:bg-ret-red-dark transition-colors"
             >
               Terug naar dashboard
             </Link>

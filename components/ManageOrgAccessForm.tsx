@@ -85,7 +85,7 @@ export default function ManageOrgAccessForm({
               className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
                 hasAccess
                   ? "border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
-                  : "bg-slate-900 text-white hover:bg-slate-800"
+                  : "bg-ret-red text-white hover:bg-ret-red-dark"
               } disabled:opacity-60`}
             >
               {loadingId === organization.id

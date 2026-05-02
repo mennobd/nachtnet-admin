@@ -82,7 +82,7 @@ export default function CreateUserForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Bijv. Jan Jansen"
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-ret-red"
             required
           />
         </div>
@@ -96,7 +96,7 @@ export default function CreateUserForm({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="naam@ret.nl"
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-ret-red"
             required
           />
         </div>
@@ -110,7 +110,7 @@ export default function CreateUserForm({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Minimaal 8 tekens"
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-ret-red"
             required
           />
           <PasswordStrengthIndicator password={password} />
@@ -123,7 +123,7 @@ export default function CreateUserForm({
           <select
             value={role}
             onChange={(e) => setRole(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-ret-red"
           >
             <option value="VIEWER">VIEWER</option>
             <option value="EDITOR">EDITOR</option>
@@ -139,7 +139,7 @@ export default function CreateUserForm({
           <select
             value={organizationId}
             onChange={(e) => setOrganizationId(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-ret-red"
             required
           >
             {organizations.map((organization) => (
@@ -166,7 +166,7 @@ export default function CreateUserForm({
       <button
         type="submit"
         disabled={loading}
-        className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+        className="rounded-xl bg-ret-red px-4 py-3 text-sm font-medium text-white hover:bg-ret-red-dark disabled:opacity-60"
       >
         {loading ? "Bezig..." : "Gebruiker aanmaken"}
       </button>

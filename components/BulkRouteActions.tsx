@@ -75,7 +75,7 @@ export default function BulkRouteActions({ routes }: { routes: Route[] }) {
             <button
               onClick={() => run("SET_STATUS", { status: statusValue })}
               disabled={loading}
-              className="rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-white hover:bg-slate-700 disabled:opacity-60"
+              className="rounded-lg bg-ret-red px-3 py-1.5 text-sm text-white hover:bg-ret-red-dark disabled:opacity-60"
             >
               Toepassen
             </button>
@@ -93,7 +93,7 @@ export default function BulkRouteActions({ routes }: { routes: Route[] }) {
             <button
               onClick={() => run("SET_DEPOT", { depot: depotValue })}
               disabled={loading}
-              className="rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-white hover:bg-slate-700 disabled:opacity-60"
+              className="rounded-lg bg-ret-red px-3 py-1.5 text-sm text-white hover:bg-ret-red-dark disabled:opacity-60"
             >
               Toepassen
             </button>

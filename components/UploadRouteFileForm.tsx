@@ -116,7 +116,7 @@ export default function UploadRouteFileForm({
           id="route-category"
           value={category}
           onChange={(e) => setCategory(e.target.value as RouteCategory)}
-          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black outline-none focus:border-ret-red"
         >
           <option value="REGULIER">Regulier</option>
           <option value="OMLEIDING">Omleiding</option>
@@ -153,7 +153,7 @@ export default function UploadRouteFileForm({
                 type="datetime-local"
                 value={activeFrom || ""}
                 onChange={(e) => setActiveFrom(e.target.value)}
-                className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500 ${
+                className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-ret-red ${
                   activeFrom ? "text-black" : "text-slate-400"
                 }`}
               />
@@ -174,7 +174,7 @@ export default function UploadRouteFileForm({
                 type="datetime-local"
                 value={activeUntil || ""}
                 onChange={(e) => setActiveUntil(e.target.value)}
-                className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500 ${
+                className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-ret-red ${
                   activeUntil ? "text-black" : "text-slate-400"
                 }`}
               />
@@ -199,7 +199,7 @@ export default function UploadRouteFileForm({
           type="file"
           accept=".gpx"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          className="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black file:mr-4 file:rounded-lg file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-slate-800"
+          className="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-black file:mr-4 file:rounded-lg file:border-0 file:bg-ret-red file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-ret-red"
         />
 
         <p className="mt-1 text-xs text-slate-500">
@@ -237,7 +237,7 @@ export default function UploadRouteFileForm({
         <button
           type="submit"
           disabled={loading}
-          className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+          className="rounded-xl bg-ret-red px-4 py-3 text-sm font-medium text-white hover:bg-ret-red-dark disabled:opacity-60"
         >
           {loading ? "Bezig met uploaden..." : "GPX uploaden"}
         </button>

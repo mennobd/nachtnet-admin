@@ -25,7 +25,7 @@ export default async function LoginPage() {
               priority
               className="mx-auto h-auto w-auto max-w-full"
             />
-            <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-slate-400">
+            <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-ret-red">
               Routebeheer
             </p>
           </div>

@@ -52,7 +52,7 @@ export default function AuditlogFilters({
             value={action}
             onChange={(e) => setAction(e.target.value)}
             placeholder="bijv. PUBLISH"
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-ret-red"
           />
         </div>
 
@@ -63,7 +63,7 @@ export default function AuditlogFilters({
           <select
             value={entity}
             onChange={(e) => setEntity(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-ret-red"
           >
             <option value="">Alle entiteiten</option>
             {entities.map((e) => (
@@ -80,7 +80,7 @@ export default function AuditlogFilters({
             type="date"
             value={from}
             onChange={(e) => setFrom(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-ret-red"
           />
         </div>
 
@@ -92,14 +92,14 @@ export default function AuditlogFilters({
             type="date"
             value={to}
             onChange={(e) => setTo(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-ret-red"
           />
         </div>
 
         <div className="md:col-span-4 flex gap-3">
           <button
             type="submit"
-            className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800"
+            className="rounded-xl bg-ret-red px-4 py-3 text-sm font-medium text-white hover:bg-ret-red-dark"
           >
             Filter toepassen
           </button>

@@ -53,7 +53,7 @@ function SearchForm() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Route zoeken…"
-          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 pr-7 text-sm text-slate-700 outline-none focus:border-slate-400 focus:bg-white transition-colors"
+          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 pr-7 text-sm text-slate-700 outline-none focus:border-ret-red/50 focus:bg-white transition-colors"
         />
         {q && (
           <button
@@ -106,7 +106,7 @@ export default function Sidebar({
           priority
           className="h-auto w-auto max-w-full"
         />
-        <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-slate-400">
+        <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-ret-red">
           Routebeheer
         </p>
       </div>
@@ -123,7 +123,7 @@ export default function Sidebar({
                   href={item.href}
                   className={`flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
                     active
-                      ? "bg-slate-900 text-white"
+                      ? "bg-ret-red text-white"
                       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
@@ -143,7 +143,7 @@ export default function Sidebar({
         >
           <span className="truncate">{userName}</span>
           {unreadCount > 0 && (
-            <span className="ml-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-500 text-xs font-semibold text-white">
+            <span className="ml-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ret-red text-xs font-semibold text-white">
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}
@@ -163,7 +163,7 @@ export default function Sidebar({
   return (
     <>
       {/* ── Mobile / tablet top bar ── */}
-      <header className="lg:hidden fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm">
+      <header className="lg:hidden fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between border-b-2 border-ret-red bg-white px-4">
         <button
           onClick={() => setOpen(true)}
           className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 transition-colors"
@@ -183,7 +183,7 @@ export default function Sidebar({
         >
           <UserIcon />
           {unreadCount > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+            <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-ret-red text-[10px] font-bold text-white">
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}

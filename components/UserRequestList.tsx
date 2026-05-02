@@ -36,7 +36,7 @@ export default function UserRequestList({ requests }: any) {
             onClick={() => setFilter(f as any)}
             className={`rounded-xl px-4 py-2 text-sm font-medium ${
               filter === f
-                ? "bg-slate-900 text-white"
+                ? "bg-ret-red text-white"
                 : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }`}
           >

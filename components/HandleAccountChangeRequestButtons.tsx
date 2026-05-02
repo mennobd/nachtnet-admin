@@ -51,7 +51,7 @@ export default function HandleAccountChangeRequestButtons({
           onChange={(e) => setRejectionReason(e.target.value)}
           rows={2}
           placeholder="Verplicht bij afwijzen"
-          className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400"
+          className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-ret-red/50"
         />
       </div>
 

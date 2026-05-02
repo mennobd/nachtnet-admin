@@ -124,7 +124,7 @@ export default function SystemMessageForm({
           <input
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-ret-red"
             placeholder={
               variant === "critical"
                 ? "Bijv. Calamiteit Erasmusbrug"
@@ -141,7 +141,7 @@ export default function SystemMessageForm({
           <textarea
             value={message}
             onChange={(event) => setMessage(event.target.value)}
-            className="min-h-28 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+            className="min-h-28 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-ret-red"
             placeholder={
               variant === "critical"
                 ? "Omschrijf kort en duidelijk wat chauffeurs direct moeten weten."
@@ -198,7 +198,7 @@ export default function SystemMessageForm({
             type="datetime-local"
             value={activeFrom || ""}
             onChange={(event) => setActiveFrom(event.target.value)}
-            className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500 ${
+            className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-ret-red ${
               activeFrom ? "text-black" : "text-slate-400"
             }`}
           />
@@ -215,7 +215,7 @@ export default function SystemMessageForm({
             type="datetime-local"
             value={activeUntil || ""}
             onChange={(event) => setActiveUntil(event.target.value)}
-            className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500 ${
+            className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-ret-red ${
               activeUntil ? "text-black" : "text-slate-400"
             }`}
           />
@@ -258,7 +258,7 @@ export default function SystemMessageForm({
         className={`rounded-xl px-4 py-3 text-sm font-medium text-white disabled:opacity-60 ${
           variant === "critical"
             ? "bg-red-700 hover:bg-red-800"
-            : "bg-slate-900 hover:bg-slate-800"
+            : "bg-ret-red hover:bg-ret-red-dark"
         }`}
       >
         {loading

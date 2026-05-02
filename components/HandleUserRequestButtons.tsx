@@ -63,7 +63,7 @@ export default function HandleUserRequestForm({
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Minimaal 8 tekens"
-          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-ret-red"
         />
       </div>
 
@@ -75,7 +75,7 @@ export default function HandleUserRequestForm({
           value={rejectionReason}
           onChange={(event) => setRejectionReason(event.target.value)}
           placeholder="Optioneel"
-          className="min-h-24 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
+          className="min-h-24 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-ret-red"
         />
       </div>
 
