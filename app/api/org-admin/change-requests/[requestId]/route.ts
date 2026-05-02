@@ -48,6 +48,13 @@ export async function PATCH(
       );
     }
 
+    if (changeRequest.userId === auth.id) {
+      return NextResponse.json(
+        { error: "Je kunt je eigen verzoek niet beoordelen." },
+        { status: 403 }
+      );
+    }
+
     // ORG_ADMIN requests must be reviewed by ADMIN only
     if (
       changeRequest.user.role === "ORG_ADMIN" &&

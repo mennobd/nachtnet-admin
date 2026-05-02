@@ -6,7 +6,7 @@ import {
   SystemMessageTargetDepot,
 } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { getRequiredMutationUser } from "@/lib/auth";
+import { apiAdminOrOrgAdmin } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 import { logEvent } from "@/lib/logger";
 import { validateSystemMessage } from "@/lib/system-message-validator";
@@ -45,14 +45,8 @@ function parseOptionalDate(value: unknown) {
 }
 
 export async function GET() {
-  const user = await getRequiredMutationUser();
-
-  if (!user) {
-    return NextResponse.json(
-      { error: "Geen rechten voor deze actie." },
-      { status: 403 }
-    );
-  }
+  const user = await apiAdminOrOrgAdmin();
+  if (user instanceof NextResponse) return user;
 
   const messages = await prisma.systemMessage.findMany({
     orderBy: [{ active: "desc" }, { createdAt: "desc" }],
@@ -62,14 +56,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const user = await getRequiredMutationUser();
-
-  if (!user) {
-    return NextResponse.json(
-      { error: "Geen rechten voor deze actie." },
-      { status: 403 }
-    );
-  }
+  const user = await apiAdminOrOrgAdmin();
+  if (user instanceof NextResponse) return user;
 
   try {
     const body = await request.json();

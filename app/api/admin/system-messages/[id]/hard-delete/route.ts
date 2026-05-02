@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getRequiredMutationUser } from "@/lib/auth";
+import { apiAdminOrOrgAdmin } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 import { logEvent } from "@/lib/logger";
 
@@ -10,14 +10,8 @@ export async function DELETE(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const user = await getRequiredMutationUser();
-
-  if (!user) {
-    return NextResponse.json(
-      { error: "Geen rechten voor deze actie." },
-      { status: 403 }
-    );
-  }
+  const user = await apiAdminOrOrgAdmin();
+  if (user instanceof NextResponse) return user;
 
   try {
     const { id } = await context.params;
