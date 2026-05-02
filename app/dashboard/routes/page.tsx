@@ -2,6 +2,12 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import BulkRouteActions from "@/components/BulkRouteActions";
 import RouteImportForm from "@/components/RouteImportForm";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import StatusBadge, {
+  publicationBadgeVariant,
+  categoryBadgeVariant,
+} from "@/components/StatusBadge";
 
 type RouteEntry = {
   isPublished: boolean;
@@ -23,7 +29,6 @@ function getPublicationState(entry: {
   activeUntil: Date | null;
 }) {
   const now = new Date();
-
   if (!entry.isPublished) return "Concept";
   if (entry.activeFrom && entry.activeFrom > now) return "Gepland";
   if (entry.activeUntil && entry.activeUntil < now) return "Verlopen";
@@ -32,7 +37,6 @@ function getPublicationState(entry: {
 
 function getActiveEntry(entries: RouteEntry[]) {
   const now = new Date();
-
   return (
     entries
       .filter((entry) => {
@@ -46,34 +50,6 @@ function getActiveEntry(entries: RouteEntry[]) {
         return b.createdAt.getTime() - a.createdAt.getTime();
       })[0] ?? null
   );
-}
-
-function getStatusClasses(status: string) {
-  switch (status) {
-    case "Live":
-      return "bg-green-100 text-green-700";
-    case "Gepland":
-      return "bg-blue-100 text-blue-700";
-    case "Verlopen":
-      return "bg-slate-200 text-slate-700";
-    case "Concept":
-      return "bg-amber-100 text-amber-700";
-    default:
-      return "bg-slate-100 text-slate-700";
-  }
-}
-
-function getCategoryBadge(category: string) {
-  switch (category) {
-    case "REGULIER":
-      return "bg-green-100 text-green-700";
-    case "OMLEIDING":
-      return "bg-orange-100 text-orange-700";
-    case "CALAMITEIT":
-      return "bg-red-100 text-red-700";
-    default:
-      return "bg-slate-200 text-slate-700";
-  }
 }
 
 const PAGE_SIZE = 25;
@@ -99,14 +75,9 @@ export default async function RoutesPage({
   const routes = await prisma.route.findMany({
     orderBy: { createdAt: "desc" },
     include: {
-      files: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
-      },
+      files: { orderBy: { createdAt: "desc" }, take: 1 },
       manifestEntries: {
-        include: {
-          file: true,
-        },
+        include: { file: true },
         orderBy: [{ priority: "asc" }, { createdAt: "desc" }],
       },
     },
@@ -116,22 +87,13 @@ export default async function RoutesPage({
     const latestFile = route.files[0] ?? null;
     const activeEntry = getActiveEntry(route.manifestEntries);
     const latestPublication = activeEntry ?? route.manifestEntries[0] ?? null;
-
     const publicationState = latestPublication
       ? getPublicationState(latestPublication)
       : "Geen publicatie";
-
     const activeCategory =
-      activeEntry?.file?.category ?? activeEntry?.type ?? "Geen actieve route";
+      activeEntry?.file?.category ?? activeEntry?.type ?? null;
 
-    return {
-      ...route,
-      latestFile,
-      latestPublication,
-      activeEntry,
-      activeCategory,
-      publicationState,
-    };
+    return { ...route, latestFile, latestPublication, activeEntry, activeCategory, publicationState };
   });
 
   const filteredRoutes = enrichedRoutes.filter((route) => {
@@ -139,27 +101,26 @@ export default async function RoutesPage({
       q === "" ||
       route.title.toLowerCase().includes(q) ||
       route.routeCode.toLowerCase().includes(q);
-
     const matchesPublication =
       publicationFilter === "alles" ||
       route.publicationState.toLowerCase() === publicationFilter.toLowerCase();
-
     const matchesUpload =
       uploadFilter === "alles" ||
       (uploadFilter === "met-upload" && !!route.latestFile) ||
       (uploadFilter === "zonder-upload" && !route.latestFile);
-
     const matchesDepot =
       depotFilter === "alles" ||
       route.depot.toLowerCase() === depotFilter.toLowerCase();
-
     return matchesQuery && matchesPublication && matchesUpload && matchesDepot;
   });
 
   const totalRoutes = enrichedRoutes.length;
   const totalPages = Math.max(1, Math.ceil(filteredRoutes.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const pagedRoutes = filteredRoutes.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const pagedRoutes = filteredRoutes.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE
+  );
 
   function pageUrl(p: number) {
     const sp = new URLSearchParams();
@@ -171,89 +132,69 @@ export default async function RoutesPage({
     const qs = sp.toString();
     return `/dashboard/routes${qs ? `?${qs}` : ""}`;
   }
-  const routesWithoutUpload = enrichedRoutes.filter(
-    (route) => !route.latestFile
-  ).length;
-  const liveCount = enrichedRoutes.filter(
-    (route) => route.publicationState === "Live"
-  ).length;
-  const plannedCount = enrichedRoutes.filter(
-    (route) => route.publicationState === "Gepland"
-  ).length;
+
+  const liveCount = enrichedRoutes.filter((r) => r.publicationState === "Live").length;
+  const plannedCount = enrichedRoutes.filter((r) => r.publicationState === "Gepland").length;
+  const routesWithoutUpload = enrichedRoutes.filter((r) => !r.latestFile).length;
+
+  const hasFilters =
+    q !== "" ||
+    publicationFilter !== "alles" ||
+    uploadFilter !== "alles" ||
+    depotFilter !== "alles";
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl bg-white p-8 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-semibold text-slate-900">Routes</h2>
-            <p className="mt-2 text-slate-600">
-              Beheer hier de routes, uploads en publicaties.
-            </p>
-          </div>
-
+      <PageHeader
+        title="Routes"
+        subtitle="Beheer hier de routes, uploads en publicaties."
+        action={
           <Link
             href="/dashboard/routes/new"
-            className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800"
+            className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-700 transition-colors"
           >
             Nieuwe route
           </Link>
-        </div>
-      </section>
+        }
+      />
 
-      <section className="grid gap-4 md:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
         <div className="rounded-2xl bg-white p-6 shadow-sm">
           <p className="text-sm text-slate-500">Totaal routes</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-900">
-            {totalRoutes}
-          </p>
+          <p className="mt-2 text-3xl font-semibold text-slate-900">{totalRoutes}</p>
         </div>
-
         <div className="rounded-2xl bg-white p-6 shadow-sm">
           <p className="text-sm text-slate-500">Live publicaties</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-900">
-            {liveCount}
-          </p>
+          <p className="mt-2 text-3xl font-semibold text-green-600">{liveCount}</p>
         </div>
-
         <div className="rounded-2xl bg-white p-6 shadow-sm">
           <p className="text-sm text-slate-500">Geplande publicaties</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-900">
-            {plannedCount}
-          </p>
+          <p className="mt-2 text-3xl font-semibold text-blue-600">{plannedCount}</p>
         </div>
-
         <div className="rounded-2xl bg-white p-6 shadow-sm">
           <p className="text-sm text-slate-500">Zonder upload</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-900">
-            {routesWithoutUpload}
-          </p>
+          <p className="mt-2 text-3xl font-semibold text-slate-700">{routesWithoutUpload}</p>
         </div>
       </section>
 
       <section className="rounded-2xl bg-white p-6 shadow-sm">
         <form className="grid gap-4 md:grid-cols-5">
           <div className="md:col-span-2">
-            <label className="mb-2 block text-sm font-medium text-slate-700">
-              Zoeken
-            </label>
+            <label className="mb-2 block text-sm font-medium text-slate-700">Zoeken</label>
             <input
               type="text"
               name="q"
               defaultValue={params.q ?? ""}
               placeholder="Zoek op routecode of titel"
-              className="w-full rounded-xl border border-slate-300 px-4 py-3"
+              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-slate-500"
             />
           </div>
-
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
-              Publicatiestatus
-            </label>
+            <label className="mb-2 block text-sm font-medium text-slate-700">Publicatiestatus</label>
             <select
               name="publication"
               defaultValue={publicationFilter}
-              className="w-full rounded-xl border border-slate-300 px-4 py-3"
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-slate-500"
             >
               <option value="alles">Alles</option>
               <option value="live">Live</option>
@@ -262,30 +203,24 @@ export default async function RoutesPage({
               <option value="verlopen">Verlopen</option>
             </select>
           </div>
-
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
-              Uploadstatus
-            </label>
+            <label className="mb-2 block text-sm font-medium text-slate-700">Uploadstatus</label>
             <select
               name="upload"
               defaultValue={uploadFilter}
-              className="w-full rounded-xl border border-slate-300 px-4 py-3"
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-slate-500"
             >
               <option value="alles">Alles</option>
               <option value="met-upload">Met upload</option>
               <option value="zonder-upload">Zonder upload</option>
             </select>
           </div>
-
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
-              Vestiging
-            </label>
+            <label className="mb-2 block text-sm font-medium text-slate-700">Vestiging</label>
             <select
               name="depot"
               defaultValue={depotFilter}
-              className="w-full rounded-xl border border-slate-300 px-4 py-3"
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-slate-500"
             >
               <option value="alles">Alles</option>
               <option value="Zuid">Zuid</option>
@@ -294,18 +229,16 @@ export default async function RoutesPage({
               <option value="NACHTNET">NACHTNET</option>
             </select>
           </div>
-
           <div className="md:col-span-5 flex items-center gap-3">
             <button
               type="submit"
-              className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800"
+              className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-700 transition-colors"
             >
               Filter toepassen
             </button>
-
             <Link
               href="/dashboard/routes"
-              className="rounded-xl border border-slate-300 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100"
+              className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors"
             >
               Filters wissen
             </Link>
@@ -313,120 +246,105 @@ export default async function RoutesPage({
         </form>
       </section>
 
-      <section className="rounded-2xl bg-white p-8 shadow-sm">
+      <section className="rounded-2xl bg-white shadow-sm">
         {filteredRoutes.length === 0 ? (
-          <p className="text-slate-600">
-            Geen routes gevonden voor deze filters.
-          </p>
+          <EmptyState
+            title={hasFilters ? "Geen routes gevonden voor deze filters" : "Nog geen routes aangemaakt"}
+            description={hasFilters ? "Pas de filters aan of verwijder ze om alle routes te zien." : undefined}
+            action={
+              !hasFilters ? (
+                <Link
+                  href="/dashboard/routes/new"
+                  className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-700 transition-colors"
+                >
+                  Nieuwe route aanmaken
+                </Link>
+              ) : undefined
+            }
+          />
         ) : (
-          <div className="space-y-4">
-            {pagedRoutes.map((route) => (
-              <div
-                key={route.id}
-                className="flex items-center justify-between rounded-xl border p-4"
-              >
-                <div className="space-y-1">
-                  <p className="font-medium text-slate-900">{route.title}</p>
-                  <p className="text-sm text-slate-500">{route.routeCode}</p>
+          <div>
+            <div className="divide-y divide-slate-100">
+              {pagedRoutes.map((route) => (
+                <div
+                  key={route.id}
+                  className="flex items-start justify-between gap-4 px-6 py-4 hover:bg-slate-50 transition-colors"
+                >
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-medium text-slate-900 truncate">{route.title}</p>
+                      <span className="text-sm text-slate-400">{route.routeCode}</span>
+                    </div>
 
-                  <p className="text-xs text-slate-400">
-                    {route.latestFile
-                      ? `Laatste versie: ${route.latestFile.version}`
-                      : "Nog geen bestand geüpload"}
-                  </p>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <StatusBadge
+                        label={route.publicationState}
+                        variant={publicationBadgeVariant(route.publicationState)}
+                      />
+                      {route.activeCategory ? (
+                        <StatusBadge
+                          label={route.activeCategory}
+                          variant={categoryBadgeVariant(route.activeCategory)}
+                        />
+                      ) : (
+                        <StatusBadge label="Geen actieve route" variant="red" />
+                      )}
+                    </div>
 
-                  <div className="flex flex-wrap items-center gap-2 pt-1">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${
-                        route.latestPublication
-                          ? getStatusClasses(route.publicationState)
-                          : "bg-slate-100 text-slate-700"
-                      }`}
+                    <p className="text-xs text-slate-400">
+                      {route.depot} · {route.status}
+                      {route.latestFile
+                        ? ` · versie ${route.latestFile.version}`
+                        : " · geen upload"}
+                      {route.activeEntry?.activeFrom
+                        ? ` · vanaf ${new Date(route.activeEntry.activeFrom).toLocaleDateString("nl-NL")}`
+                        : ""}
+                      {route.activeEntry?.activeUntil
+                        ? ` t/m ${new Date(route.activeEntry.activeUntil).toLocaleDateString("nl-NL")}`
+                        : ""}
+                    </p>
+                  </div>
+
+                  <div className="flex shrink-0 items-center gap-2">
+                    <Link
+                      href={`/dashboard/routes/${route.id}/publish`}
+                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 transition-colors"
                     >
-                      {route.publicationState}
-                    </span>
-
-                    {route.activeEntry ? (
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-medium ${getCategoryBadge(
-                          route.activeCategory
-                        )}`}
-                      >
-                        {route.activeCategory} actief
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-700">
-                        Geen actieve route
-                      </span>
-                    )}
-
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-                      {route.status}
-                    </span>
-
-                    <span className="rounded-full bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
-                      {route.depot}
-                    </span>
-
-                    {route.activeEntry?.activeFrom ? (
-                      <span className="text-xs text-slate-500">
-                        Vanaf:{" "}
-                        {new Date(route.activeEntry.activeFrom).toLocaleString(
-                          "nl-NL"
-                        )}
-                      </span>
-                    ) : null}
-
-                    {route.activeEntry?.activeUntil ? (
-                      <span className="text-xs text-slate-500">
-                        Tot:{" "}
-                        {new Date(route.activeEntry.activeUntil).toLocaleString(
-                          "nl-NL"
-                        )}
-                      </span>
-                    ) : null}
+                      Publiceren
+                    </Link>
+                    <Link
+                      href={`/dashboard/routes/${route.id}/upload`}
+                      className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 transition-colors"
+                    >
+                      Upload GPX
+                    </Link>
                   </div>
                 </div>
+              ))}
+            </div>
 
-                <div className="flex items-center gap-3">
-                  <Link
-                    href={`/dashboard/routes/${route.id}/publish`}
-                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                  >
-                    Publiceren
-                  </Link>
-
-                  <Link
-                    href={`/dashboard/routes/${route.id}/upload`}
-                    className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700"
-                  >
-                    Upload GPX
-                  </Link>
-                </div>
-              </div>
-            ))}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t border-slate-200 pt-4 text-sm">
+              <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4 text-sm">
                 <span className="text-slate-500">
                   {filteredRoutes.length} resultaten · pagina {safePage} van {totalPages}
                 </span>
                 <div className="flex gap-2">
-                  {safePage > 1 ? (
+                  {safePage > 1 && (
                     <a
                       href={pageUrl(safePage - 1)}
                       className="rounded-xl border border-slate-300 px-4 py-2 text-slate-700 hover:bg-slate-100"
                     >
                       Vorige
                     </a>
-                  ) : null}
-                  {safePage < totalPages ? (
+                  )}
+                  {safePage < totalPages && (
                     <a
                       href={pageUrl(safePage + 1)}
                       className="rounded-xl border border-slate-300 px-4 py-2 text-slate-700 hover:bg-slate-100"
                     >
                       Volgende
                     </a>
-                  ) : null}
+                  )}
                 </div>
               </div>
             )}
@@ -435,7 +353,7 @@ export default async function RoutesPage({
       </section>
 
       <section className="rounded-2xl bg-white p-8 shadow-sm">
-        <h3 className="mb-1 text-lg font-semibold text-slate-900">Bulkacties</h3>
+        <h3 className="mb-1 text-base font-semibold text-slate-900">Bulkacties</h3>
         <p className="mb-4 text-sm text-slate-500">
           Selecteer routes om hun status of vestiging in één keer te wijzigen.
         </p>
@@ -451,7 +369,7 @@ export default async function RoutesPage({
       </section>
 
       <section className="rounded-2xl bg-white p-8 shadow-sm">
-        <h3 className="mb-1 text-lg font-semibold text-slate-900">Routes importeren via CSV</h3>
+        <h3 className="mb-1 text-base font-semibold text-slate-900">Routes importeren via CSV</h3>
         <p className="mb-4 text-sm text-slate-500">
           Upload een CSV-bestand om meerdere routes tegelijk aan te maken. Download het voorbeeldbestand voor het juiste formaat.
         </p>

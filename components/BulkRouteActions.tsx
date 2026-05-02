@@ -2,17 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useToast } from "@/components/Toast";
 
 type Route = { id: string; title: string; routeCode: string; depot: string; status: string };
 
 export default function BulkRouteActions({ routes }: { routes: Route[] }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [depotValue, setDepotValue] = useState("Zuid");
   const [statusValue, setStatusValue] = useState("ARCHIVED");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState("");
-  const [error, setError] = useState("");
 
   function toggleAll() {
     if (selected.size === routes.length) {
@@ -34,8 +34,6 @@ export default function BulkRouteActions({ routes }: { routes: Route[] }) {
   async function run(action: string, extra?: Record<string, string>) {
     if (selected.size === 0) return;
     setLoading(true);
-    setResult("");
-    setError("");
     try {
       const res = await fetch("/api/routes/bulk", {
         method: "POST",
@@ -44,14 +42,14 @@ export default function BulkRouteActions({ routes }: { routes: Route[] }) {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Actie mislukt.");
+        toast(data.error || "Actie mislukt.", "error");
       } else {
-        setResult(`${data.updated} route(s) bijgewerkt.`);
+        toast(`${data.updated} route(s) bijgewerkt.`);
         setSelected(new Set());
         router.refresh();
       }
     } catch {
-      setError("Er is een fout opgetreden.");
+      toast("Er is een fout opgetreden.", "error");
     } finally {
       setLoading(false);
     }
@@ -107,13 +105,6 @@ export default function BulkRouteActions({ routes }: { routes: Route[] }) {
             Deselecteer alles
           </button>
         </div>
-      )}
-
-      {result && (
-        <p className="rounded-xl border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-700">{result}</p>
-      )}
-      {error && (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</p>
       )}
 
       <div className="space-y-2">

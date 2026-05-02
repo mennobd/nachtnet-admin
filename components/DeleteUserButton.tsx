@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import { useToast } from "@/components/Toast";
 
 export default function DeleteUserButton({
   userId,
@@ -12,27 +13,26 @@ export default function DeleteUserButton({
   userName: string;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleConfirm() {
     setLoading(true);
     try {
-      const response = await fetch(`/api/admin/users/${userId}`, {
+      const res = await fetch(`/api/admin/users/${userId}`, {
         method: "DELETE",
       });
-      const data = await response.json();
-      if (!response.ok) {
-        alert(data.error || "Verwijderen mislukt.");
-        setLoading(false);
-        setOpen(false);
-        return;
+      const data = await res.json();
+      if (!res.ok) {
+        toast(data.error || "Verwijderen mislukt.", "error");
+      } else {
+        toast(`${userName} is verwijderd.`);
+        router.refresh();
       }
-      router.refresh();
-      setOpen(false);
-      setLoading(false);
     } catch {
-      alert("Er is een fout opgetreden.");
+      toast("Er is een fout opgetreden.", "error");
+    } finally {
       setLoading(false);
       setOpen(false);
     }
@@ -49,7 +49,7 @@ export default function DeleteUserButton({
       </button>
       <ConfirmDialog
         open={open}
-        title={`Gebruiker verwijderen`}
+        title="Gebruiker verwijderen"
         description={`Weet je zeker dat je ${userName} definitief wilt verwijderen?\n\nDeze actie kan niet ongedaan worden gemaakt.`}
         confirmLabel="Verwijderen"
         destructive

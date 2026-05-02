@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { getInvalidConceptReleases } from "@/lib/dashboard-health";
 import { getRoleMeta } from "@/lib/roles";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
 
 function getPublicationState(entry: {
   isPublished: boolean;
@@ -86,41 +88,30 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* HEADER */}
-      <section className="rounded-2xl bg-white p-8 shadow-sm">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-900">
-              Dashboard
-            </h1>
-            <p className="mt-2 text-slate-600">
-              Overzicht van routes, publicaties en operationele aandachtspunten.
-            </p>
-            <p className="mt-2 text-sm text-slate-500">
-              Ingelogd als {user.name} · {getRoleMeta(user.role).label}
-            </p>
-          </div>
-
-          <div className="flex gap-3">
+      <PageHeader
+        title="Dashboard"
+        subtitle="Overzicht van routes, publicaties en operationele aandachtspunten."
+        meta={`Ingelogd als ${user.name} · ${getRoleMeta(user.role).label}`}
+        action={
+          <>
             <a
               href="/api/manifest/live"
               target="_blank"
               rel="noreferrer"
-              className="rounded-lg border px-4 py-2 text-sm"
+              className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors"
             >
               Open manifest
             </a>
-
             <a
               href="/api/manifest/live"
               download
-              className="rounded-lg bg-slate-900 px-4 py-2 text-sm text-white"
+              className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-700 transition-colors"
             >
               Download manifest
             </a>
-          </div>
-        </div>
-      </section>
+          </>
+        }
+      />
 
       {/* KPI BLOKKEN */}
       <section className="grid gap-4 md:grid-cols-6">
@@ -165,9 +156,7 @@ export default async function DashboardPage() {
 
         <div className="mt-4 space-y-4">
           {invalidConceptReleases.length === 0 ? (
-            <p className="text-sm text-slate-500">
-              Alles is valid — geen issues.
-            </p>
+            <EmptyState title="Alles is valid — geen issues" />
           ) : (
             invalidConceptReleases.map((r) => (
               <div
@@ -261,9 +250,7 @@ export default async function DashboardPage() {
           ))}
 
           {withoutUpload.length === 0 && expired.length === 0 && (
-            <p className="text-sm text-slate-500">
-              Geen actiepunten.
-            </p>
+            <EmptyState title="Geen actiepunten" />
           )}
         </div>
       </section>

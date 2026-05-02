@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { UserRole } from "@prisma/client";
+import { useToast } from "@/components/Toast";
 
 type OrganizationOption = {
   id: string;
@@ -29,6 +30,7 @@ export default function EditUserForm({
   canEditOrganization: boolean;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
 
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
@@ -37,13 +39,11 @@ export default function EditUserForm({
     initialOrganizationId ?? organizations[0]?.id ?? ""
   );
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState("");
   const [error, setError] = useState("");
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
-    setStatus("");
     setError("");
 
     try {
@@ -68,7 +68,7 @@ export default function EditUserForm({
         return;
       }
 
-      setStatus("Gebruiker bijgewerkt.");
+      toast("Gebruiker bijgewerkt.");
       setLoading(false);
       router.refresh();
     } catch {
@@ -168,12 +168,6 @@ export default function EditUserForm({
       {error ? (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
-        </div>
-      ) : null}
-
-      {status ? (
-        <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          {status}
         </div>
       ) : null}
 

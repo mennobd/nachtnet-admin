@@ -2,53 +2,44 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useToast } from "@/components/Toast";
 
-type PublishReleaseButtonProps = {
+export default function PublishReleaseButton({
+  entryId,
+  routeTitle,
+  version,
+}: {
   entryId: string;
   routeTitle: string;
   version: string;
-};
-
-export default function PublishReleaseButton(
-  props: PublishReleaseButtonProps
-) {
-  const { entryId, routeTitle, version } = props;
+}) {
   const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
   async function handlePublish() {
     const confirmed = window.confirm(
       `Weet je zeker dat je concept-release ${version} van "${routeTitle}" live wilt zetten?`
     );
-
     if (!confirmed) return;
 
     setLoading(true);
-
     try {
-      const response = await fetch(`/api/manifest-entry/${entryId}`, {
+      const res = await fetch(`/api/manifest-entry/${entryId}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          isPublished: true,
-          priority: 1,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isPublished: true, priority: 1 }),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(data.error || "Publiceren mislukt.");
-        setLoading(false);
-        return;
+      const data = await res.json();
+      if (!res.ok) {
+        toast(data.error || "Publiceren mislukt.", "error");
+      } else {
+        toast(`Release ${version} is live gezet.`);
+        router.refresh();
       }
-
-      router.refresh();
-      setLoading(false);
     } catch {
-      alert("Er is een fout opgetreden tijdens publiceren.");
+      toast("Er is een fout opgetreden tijdens publiceren.", "error");
+    } finally {
       setLoading(false);
     }
   }

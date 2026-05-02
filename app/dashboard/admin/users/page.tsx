@@ -5,6 +5,10 @@ import EditUserForm from "@/components/EditUserForm";
 import ChangeUserPasswordForm from "@/components/ChangeUserPasswordForm";
 import UserActivationButton from "@/components/UserActivationButton";
 import DeleteUserButton from "@/components/DeleteUserButton";
+import UserAccordion from "@/components/UserAccordion";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import StatusBadge, { roleBadgeVariant } from "@/components/StatusBadge";
 
 const PAGE_SIZE = 20;
 
@@ -78,12 +82,10 @@ export default async function UsersPage({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl bg-white p-8 shadow-sm">
-        <h2 className="text-2xl font-semibold text-slate-900">Gebruikersbeheer</h2>
-        <p className="mt-2 text-slate-600">
-          Beheer hier gebruikersaccounts. Details en beheeracties staan per gebruiker onder Aanpassen.
-        </p>
-      </section>
+      <PageHeader
+        title="Gebruikersbeheer"
+        subtitle="Beheer hier gebruikersaccounts. Details en beheeracties staan per gebruiker onder Aanpassen."
+      />
 
       <section className="rounded-2xl bg-white p-6 shadow-sm">
         <form className="flex gap-3">
@@ -120,9 +122,9 @@ export default async function UsersPage({
         </div>
 
         {users.length === 0 ? (
-          <p className="text-sm text-slate-600">
-            {q ? `Geen gebruikers gevonden voor "${q}".` : "Er zijn nog geen gebruikers aangemaakt."}
-          </p>
+          <EmptyState
+            title={q ? `Geen gebruikers gevonden voor "${q}"` : "Er zijn nog geen gebruikers aangemaakt"}
+          />
         ) : (
           <div className="space-y-4">
             {users.map((user) => (
@@ -154,35 +156,16 @@ export default async function UsersPage({
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${
-                        user.role === "ADMIN"
-                          ? "bg-purple-100 text-purple-700"
-                          : user.role === "ORG_ADMIN"
-                          ? "bg-indigo-100 text-indigo-700"
-                          : user.role === "EDITOR"
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-slate-200 text-slate-700"
-                      }`}
-                    >
-                      {user.role}
-                    </span>
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${
-                        user.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {user.isActive ? "Actief" : "Gedeactiveerd"}
-                    </span>
+                    <StatusBadge label={user.role} variant={roleBadgeVariant(user.role)} />
+                    <StatusBadge
+                      label={user.isActive ? "Actief" : "Gedeactiveerd"}
+                      variant={user.isActive ? "green" : "red"}
+                    />
                   </div>
                 </div>
 
-                <details className="mt-4 rounded-xl border border-slate-200 bg-slate-50">
-                  <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-slate-700 [&::-webkit-details-marker]:hidden">
-                    Aanpassen…
-                  </summary>
-
-                  <div className="mb-4 flex flex-wrap gap-3">
+                <UserAccordion>
+                  <div className="px-4 pt-4 pb-2 flex flex-wrap gap-3">
                     <UserActivationButton
                       userId={user.id}
                       userName={user.name}
@@ -192,7 +175,6 @@ export default async function UsersPage({
                       <DeleteUserButton userId={user.id} userName={user.name} />
                     ) : null}
                   </div>
-
                   <div className="border-t border-slate-200 p-4">
                     <EditUserForm
                       userId={user.id}
@@ -208,7 +190,7 @@ export default async function UsersPage({
                       <ChangeUserPasswordForm userId={user.id} userName={user.name} />
                     </div>
                   </div>
-                </details>
+                </UserAccordion>
               </div>
             ))}
           </div>

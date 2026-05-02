@@ -2,6 +2,7 @@ import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import Sidebar from "@/components/Sidebar";
 import SessionTimeout from "@/components/SessionTimeout";
+import { ToastProvider } from "@/components/Toast";
 
 export default async function DashboardLayout({
   children,
@@ -97,8 +98,10 @@ export default async function DashboardLayout({
 
       {/* pt-14 offsets the fixed top bar on mobile/tablet; removed on lg */}
       <main className="flex-1 min-w-0 pt-14 lg:pt-0 p-4 sm:p-6 lg:p-8">
-        <SessionTimeout />
-        {children}
+        <ToastProvider>
+          <SessionTimeout />
+          {children}
+        </ToastProvider>
       </main>
     </div>
   );

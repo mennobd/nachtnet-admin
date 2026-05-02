@@ -2,47 +2,42 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-type RollbackReleaseButtonProps = {
-  entryId: string;
-  routeTitle: string;
-  version: string;
-};
+import { useToast } from "@/components/Toast";
 
 export default function RollbackReleaseButton({
   entryId,
   routeTitle,
   version,
-}: RollbackReleaseButtonProps) {
+}: {
+  entryId: string;
+  routeTitle: string;
+  version: string;
+}) {
   const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
   async function handleRollback() {
     const confirmed = window.confirm(
       `Weet je zeker dat je release ${version} van "${routeTitle}" live wilt zetten als rollback?`
     );
-
     if (!confirmed) return;
 
     setLoading(true);
-
     try {
-      const response = await fetch(`/api/manifest-entry/${entryId}/rollback`, {
+      const res = await fetch(`/api/manifest-entry/${entryId}/rollback`, {
         method: "POST",
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(data.error || "Rollback mislukt.");
-        setLoading(false);
-        return;
+      const data = await res.json();
+      if (!res.ok) {
+        toast(data.error || "Rollback mislukt.", "error");
+      } else {
+        toast(`Rollback naar ${version} geslaagd.`);
+        router.refresh();
       }
-
-      router.refresh();
-      setLoading(false);
     } catch {
-      alert("Er is een fout opgetreden tijdens rollback.");
+      toast("Er is een fout opgetreden tijdens rollback.", "error");
+    } finally {
       setLoading(false);
     }
   }

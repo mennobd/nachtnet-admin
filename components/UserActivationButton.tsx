@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useToast } from "@/components/Toast";
 
 export default function UserActivationButton({
   userId,
@@ -13,6 +14,7 @@ export default function UserActivationButton({
   isActive: boolean;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
   async function handleClick() {
@@ -20,32 +22,24 @@ export default function UserActivationButton({
     const confirmed = window.confirm(
       `Weet je zeker dat je ${userName} wilt ${action}?`
     );
-
     if (!confirmed) return;
 
     setLoading(true);
-
     try {
       const endpoint = isActive
         ? `/api/admin/users/${userId}/deactivate`
         : `/api/admin/users/${userId}/activate`;
-
-      const response = await fetch(endpoint, {
-        method: "POST",
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(data.error || "Actie mislukt.");
-        setLoading(false);
-        return;
+      const res = await fetch(endpoint, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        toast(data.error || "Actie mislukt.", "error");
+      } else {
+        toast(`${userName} is ${isActive ? "gedeactiveerd" : "geactiveerd"}.`);
+        router.refresh();
       }
-
-      router.refresh();
-      setLoading(false);
     } catch {
-      alert("Er is een fout opgetreden.");
+      toast("Er is een fout opgetreden.", "error");
+    } finally {
       setLoading(false);
     }
   }
