@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { apiAdmin } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ organizationId: string }> }
 ) {
-  const admin = await requireAdmin();
+  const auth = await apiAdmin();
+  if (auth instanceof NextResponse) return auth;
+  const admin = auth;
 
   try {
     const { organizationId } = await params;
@@ -70,7 +72,9 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ organizationId: string }> }
 ) {
-  const admin = await requireAdmin();
+  const auth = await apiAdmin();
+  if (auth instanceof NextResponse) return auth;
+  const admin = auth;
 
   try {
     const { organizationId } = await params;

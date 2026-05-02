@@ -48,7 +48,12 @@ export default function UploadRouteFileForm({
         body: formData,
       });
 
-      let data: any = null;
+      type UploadResponse = {
+        fileName?: string;
+        version?: string;
+        error?: string;
+      };
+      let data: UploadResponse | null = null;
 
       try {
         data = await response.json();
@@ -138,13 +143,13 @@ export default function UploadRouteFileForm({
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <div>
               <label
-                htmlFor="activeFrom"
+                htmlFor="upload-active-from"
                 className="mb-2 block text-sm font-medium text-slate-700"
               >
                 Actief vanaf
               </label>
               <input
-                id="activeFrom"
+                id="upload-active-from"
                 type="datetime-local"
                 value={activeFrom || ""}
                 onChange={(e) => setActiveFrom(e.target.value)}
@@ -159,16 +164,16 @@ export default function UploadRouteFileForm({
 
             <div>
               <label
-                htmlFor="activeUntil"
+                htmlFor="upload-active-until"
                 className="mb-2 block text-sm font-medium text-slate-700"
               >
                 Actief tot
               </label>
              <input
-                id="activeFrom"
+                id="upload-active-until"
                 type="datetime-local"
-                value={activeFrom || ""}
-                onChange={(e) => setActiveFrom(e.target.value)}
+                value={activeUntil || ""}
+                onChange={(e) => setActiveUntil(e.target.value)}
                 className={`w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500 ${
                   activeUntil ? "text-black" : "text-slate-400"
                 }`}

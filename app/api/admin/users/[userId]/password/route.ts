@@ -1,21 +1,16 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
-import { requireUser } from "@/lib/auth";
+import { apiAdminOrOrgAdmin } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ userId: string }> }
 ) {
-  const currentUser = await requireUser();
-
-  if (currentUser.role !== "ADMIN" && currentUser.role !== "ORG_ADMIN") {
-    return NextResponse.json(
-      { error: "Geen rechten om wachtwoorden te wijzigen." },
-      { status: 403 }
-    );
-  }
+  const auth = await apiAdminOrOrgAdmin();
+  if (auth instanceof NextResponse) return auth;
+  const currentUser = auth;
 
   try {
     const { userId } = await params;

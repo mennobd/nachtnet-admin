@@ -2,7 +2,9 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { SESSION_COOKIE_NAME, verifySessionToken } from "@/lib/session";
 
 export type SessionUser = {
   id: string;
@@ -14,8 +16,6 @@ export type SessionUser = {
   organizationAccessIds: string[];
 };
 
-const SESSION_COOKIE_NAME = "session";
-
 export async function getCurrentUser(): Promise<SessionUser | null> {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get(SESSION_COOKIE_NAME);
@@ -24,10 +24,14 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     return null;
   }
 
-  const userId = sessionCookie.value;
+  const payload = await verifySessionToken(sessionCookie.value);
+
+  if (!payload) {
+    return null;
+  }
 
   const user = await prisma.user.findUnique({
-    where: { id: userId },
+    where: { id: payload.sub },
     select: {
       id: true,
       name: true,
@@ -64,6 +68,8 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     organizationAccessIds: accessIds,
   };
 }
+
+// Page guards — redirect on failure (correct for Server Components / pages)
 
 export async function requireUser(): Promise<SessionUser> {
   const user = await getCurrentUser();
@@ -119,6 +125,16 @@ export async function requireMutationAccess(): Promise<SessionUser> {
   return user;
 }
 
+export async function requireMutationUser(): Promise<SessionUser> {
+  const user = await requireUser();
+
+  if (user.role === "VIEWER") {
+    redirect("/dashboard");
+  }
+
+  return user;
+}
+
 export async function getRequiredMutationUser(): Promise<SessionUser | null> {
   const user = await getCurrentUser();
 
@@ -131,4 +147,64 @@ export async function getRequiredMutationUser(): Promise<SessionUser | null> {
   }
 
   return user;
+}
+
+// API guards — return NextResponse on failure (correct for API routes)
+
+export async function apiUser(): Promise<SessionUser | NextResponse> {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return NextResponse.json(
+      { error: "Niet ingelogd." },
+      { status: 401 }
+    );
+  }
+
+  return user;
+}
+
+export async function apiAdmin(): Promise<SessionUser | NextResponse> {
+  const auth = await apiUser();
+
+  if (auth instanceof NextResponse) return auth;
+
+  if (auth.role !== "ADMIN") {
+    return NextResponse.json(
+      { error: "Geen rechten voor deze actie." },
+      { status: 403 }
+    );
+  }
+
+  return auth;
+}
+
+export async function apiAdminOrOrgAdmin(): Promise<SessionUser | NextResponse> {
+  const auth = await apiUser();
+
+  if (auth instanceof NextResponse) return auth;
+
+  if (auth.role !== "ADMIN" && auth.role !== "ORG_ADMIN") {
+    return NextResponse.json(
+      { error: "Geen rechten voor deze actie." },
+      { status: 403 }
+    );
+  }
+
+  return auth;
+}
+
+export async function apiMutationUser(): Promise<SessionUser | NextResponse> {
+  const auth = await apiUser();
+
+  if (auth instanceof NextResponse) return auth;
+
+  if (auth.role === "VIEWER") {
+    return NextResponse.json(
+      { error: "Geen rechten voor deze actie." },
+      { status: 403 }
+    );
+  }
+
+  return auth;
 }

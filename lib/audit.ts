@@ -31,3 +31,29 @@ export async function writeAuditLog({
     console.error("AUDIT LOG ERROR:", error);
   }
 }
+
+type TransactionClient = Omit<
+  Prisma.TransactionClient,
+  "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
+>;
+
+export async function writeAuditLogTx(
+  tx: TransactionClient,
+  userId: string | null,
+  input: {
+    action: string;
+    entity: string;
+    entityId: string;
+    metadata?: Prisma.InputJsonValue;
+  }
+) {
+  await tx.auditLog.create({
+    data: {
+      action: input.action,
+      entity: input.entity,
+      entityId: input.entityId,
+      metadata: input.metadata,
+      userId,
+    },
+  });
+}

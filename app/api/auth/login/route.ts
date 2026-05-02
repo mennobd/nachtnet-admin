@@ -1,11 +1,34 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
+import {
+  SESSION_COOKIE_NAME,
+  signSessionToken,
+  getSessionCookieOptions,
+} from "@/lib/session";
+import { checkRateLimit, consumeRateLimit } from "@/lib/rate-limit";
 
-const SESSION_COOKIE_NAME = "session";
+const IP_LIMIT = { max: 20, windowMs: 5 * 60_000 };
+const EMAIL_LIMIT = { max: 5, windowMs: 15 * 60_000 };
 
 export async function POST(request: Request) {
   try {
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      request.headers.get("x-real-ip") ??
+      "unknown";
+
+    const ipCheck = checkRateLimit(`login:ip:${ip}`, IP_LIMIT);
+    if (!ipCheck.ok) {
+      return NextResponse.json(
+        { error: "Te veel inlogpogingen. Probeer het later opnieuw." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(ipCheck.retryAfter) },
+        }
+      );
+    }
+
     const body = await request.json();
 
     const email = String(body.email ?? "").trim().toLowerCase();
@@ -15,6 +38,20 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "E-mailadres en wachtwoord zijn verplicht." },
         { status: 400 }
+      );
+    }
+
+    const emailCheck = checkRateLimit(`login:email:${email}`, EMAIL_LIMIT);
+    if (!emailCheck.ok) {
+      return NextResponse.json(
+        {
+          error:
+            "Te veel inlogpogingen voor dit e-mailadres. Probeer het later opnieuw.",
+        },
+        {
+          status: 429,
+          headers: { "Retry-After": String(emailCheck.retryAfter) },
+        }
       );
     }
 
@@ -30,6 +67,8 @@ export async function POST(request: Request) {
     });
 
     if (!user) {
+      consumeRateLimit(`login:ip:${ip}`, IP_LIMIT);
+      consumeRateLimit(`login:email:${email}`, EMAIL_LIMIT);
       return NextResponse.json(
         { error: "Ongeldige inloggegevens." },
         { status: 401 }
@@ -46,11 +85,15 @@ export async function POST(request: Request) {
     const validPassword = await bcrypt.compare(password, user.passwordHash);
 
     if (!validPassword) {
+      consumeRateLimit(`login:ip:${ip}`, IP_LIMIT);
+      consumeRateLimit(`login:email:${email}`, EMAIL_LIMIT);
       return NextResponse.json(
         { error: "Ongeldige inloggegevens." },
         { status: 401 }
       );
     }
+
+    const token = await signSessionToken(user.id);
 
     const response = NextResponse.json({
       success: true,
@@ -61,12 +104,7 @@ export async function POST(request: Request) {
       },
     });
 
-    response.cookies.set(SESSION_COOKIE_NAME, user.id, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "lax",
-      path: "/",
-    });
+    response.cookies.set(SESSION_COOKIE_NAME, token, getSessionCookieOptions());
 
     return response;
   } catch (error) {

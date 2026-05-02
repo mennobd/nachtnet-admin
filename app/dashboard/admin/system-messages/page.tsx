@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/db";
-import { getRequiredMutationUser } from "@/lib/auth";
+import { requireMutationUser } from "@/lib/auth";
 import SystemMessageForm from "@/components/SystemMessageForm";
 import DeactivateSystemMessageButton from "@/components/DeactivateSystemMessageButton";
 import DeleteSystemMessageButton from "@/components/DeleteSystemMessageButton";
@@ -89,7 +89,7 @@ function isCriticalOlderThan24Hours(message: {
 }
 
 export default async function SystemMessagesPage() {
-  await getRequiredMutationUser();
+  await requireMutationUser();
 
   const messages = await prisma.systemMessage.findMany({
     orderBy: [{ active: "desc" }, { createdAt: "desc" }],

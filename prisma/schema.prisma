@@ -154,12 +154,12 @@ model UserApprovalRequest {
   organization    Organization       @relation(fields: [organizationId], references: [id])
 
   requestedById   String
-  requestedBy     User               @relation("UserApprovalRequestedBy", fields: [requestedById], references: [id])
+  requestedBy     User               @relation("UserApprovalRequestedBy", fields: [requestedById], references: [id], onDelete: Restrict)
 
   status          UserApprovalStatus @default(PENDING)
 
   reviewedById    String?
-  reviewedBy      User?              @relation("UserApprovalReviewedBy", fields: [reviewedById], references: [id])
+  reviewedBy      User?              @relation("UserApprovalReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
   reviewedAt      DateTime?
   rejectionReason String?
 

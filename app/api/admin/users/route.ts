@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { apiAdmin } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 
 export async function GET() {
-  await requireAdmin();
+  const auth = await apiAdmin();
+  if (auth instanceof NextResponse) return auth;
 
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
@@ -30,7 +31,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  await requireAdmin();
+  const auth = await apiAdmin();
+  if (auth instanceof NextResponse) return auth;
 
   try {
     const body = await request.json();

@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { apiAdmin } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ requestId: string }> }
 ) {
-  const admin = await requireAdmin();
+  const auth = await apiAdmin();
+  if (auth instanceof NextResponse) return auth;
+  const admin = auth;
 
   try {
     const { requestId } = await params;
