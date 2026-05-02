@@ -135,6 +135,22 @@ export async function requireMutationUser(): Promise<SessionUser> {
   return user;
 }
 
+export async function requireSystemMessageUser(): Promise<SessionUser> {
+  const user = await requireUser();
+
+  if (user.role !== "VIEWER") return user;
+
+  if (user.organizationId) {
+    const org = await prisma.organization.findUnique({
+      where: { id: user.organizationId },
+      select: { name: true },
+    });
+    if (org?.name === "AFD-NaCo") return user;
+  }
+
+  redirect("/dashboard");
+}
+
 export async function getRequiredMutationUser(): Promise<SessionUser | null> {
   const user = await getCurrentUser();
 
