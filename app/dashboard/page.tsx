@@ -49,11 +49,17 @@ export default async function DashboardPage() {
   const expired = enriched.filter((r) => r.state === "Verlopen");
   const concepts = enriched.filter((r) => r.state === "Concept");
   const live = enriched.filter((r) => r.state === "Live");
+  const planned = enriched.filter((r) => r.state === "Gepland");
+
+  const expiringSoon = enriched.filter((r) => {
+    if (!r.latest?.activeUntil || !r.latest.isPublished) return false;
+    const diff = new Date(r.latest.activeUntil).getTime() - now.getTime();
+    return diff > 0 && diff < 72 * 60 * 60 * 1000;
+  });
 
   const upcoming = enriched.filter((r) => {
     if (!r.latest?.activeFrom) return false;
-    const diff =
-      new Date(r.latest.activeFrom).getTime() - now.getTime();
+    const diff = new Date(r.latest.activeFrom).getTime() - now.getTime();
     return diff > 0 && diff < 72 * 60 * 60 * 1000;
   });
 
@@ -61,6 +67,25 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {/* ALERTS */}
+      {(!manifestHealthy || expiringSoon.length > 0) && (
+        <div className="space-y-3">
+          {!manifestHealthy && (
+            <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-4 text-sm text-red-800">
+              <span className="font-semibold">Waarschuwing:</span> Er zijn momenteel geen live routes in het manifest. Publiceer een route om de app te voorzien van actuele data.
+            </div>
+          )}
+          {expiringSoon.length > 0 && (
+            <div className="rounded-2xl border border-orange-200 bg-orange-50 px-6 py-4 text-sm text-orange-800">
+              <span className="font-semibold">Let op:</span> {expiringSoon.length} route{expiringSoon.length !== 1 ? "s verlopen" : " verloopt"} binnen 72 uur.{" "}
+              <Link href="/dashboard/routes?publication=live" className="underline font-medium">
+                Bekijk live routes →
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* HEADER */}
       <section className="rounded-2xl bg-white p-8 shadow-sm">
         <div className="flex items-center justify-between gap-4">
@@ -99,44 +124,40 @@ export default async function DashboardPage() {
 
       {/* KPI BLOKKEN */}
       <section className="grid gap-4 md:grid-cols-6">
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
+        <div className={`rounded-2xl p-6 shadow-sm ${manifestHealthy ? "bg-white" : "border border-red-200 bg-red-50"}`}>
           <p className="text-sm text-slate-500">Manifest status</p>
-          <p className="mt-2 text-2xl font-semibold">
+          <p className={`mt-2 text-2xl font-semibold ${manifestHealthy ? "text-slate-900" : "text-red-700"}`}>
             {manifestHealthy ? "Gezond" : "Waarschuwing"}
           </p>
         </div>
 
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
+        <Link href="/dashboard/routes?publication=live" className="rounded-2xl bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
           <p className="text-sm text-slate-500">Live</p>
-          <p className="mt-2 text-3xl font-semibold">{live.length}</p>
-        </div>
+          <p className="mt-2 text-3xl font-semibold text-green-600">{live.length}</p>
+        </Link>
 
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
+        <Link href="/dashboard/routes?publication=gepland" className="rounded-2xl bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+          <p className="text-sm text-slate-500">Gepland</p>
+          <p className="mt-2 text-3xl font-semibold text-blue-600">{planned.length}</p>
+        </Link>
+
+        <Link href="/dashboard/routes?publication=concept" className="rounded-2xl bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
           <p className="text-sm text-slate-500">Concept</p>
-          <p className="mt-2 text-3xl font-semibold">{concepts.length}</p>
-        </div>
+          <p className="mt-2 text-3xl font-semibold text-amber-600">{concepts.length}</p>
+        </Link>
 
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
+        <Link href="/dashboard/routes?publication=verlopen" className="rounded-2xl bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
           <p className="text-sm text-slate-500">Verlopen</p>
-          <p className="mt-2 text-3xl font-semibold">{expired.length}</p>
-        </div>
+          <p className="mt-2 text-3xl font-semibold text-slate-700">{expired.length}</p>
+        </Link>
 
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
+        <Link href="/dashboard/routes?upload=zonder-upload" className="rounded-2xl bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
           <p className="text-sm text-slate-500">Zonder upload</p>
-          <p className="mt-2 text-3xl font-semibold">
-            {withoutUpload.length}
-          </p>
-        </div>
-
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="text-sm text-slate-500">Binnenkort live</p>
-          <p className="mt-2 text-3xl font-semibold">
-            {upcoming.length}
-          </p>
-        </div>
+          <p className="mt-2 text-3xl font-semibold text-slate-700">{withoutUpload.length}</p>
+        </Link>
       </section>
 
-      {/* NIEUW: ONGELDIGE CONCEPT RELEASES */}
+      {/* ONGELDIGE CONCEPT RELEASES */}
       <section className="rounded-2xl bg-white p-8 shadow-sm">
         <h2 className="text-lg font-semibold">
           Ongeldige concept-releases
@@ -187,6 +208,12 @@ export default async function DashboardPage() {
                 <p className="font-medium">{r.title}</p>
                 <p className="text-xs text-slate-500">
                   {r.routeCode} · {r.depot}
+                  {r.state === "Verlopen" && (
+                    <span className="ml-2 rounded-full bg-slate-200 px-2 py-0.5 text-xs text-slate-600">Verlopen</span>
+                  )}
+                  {r.files.length === 0 && (
+                    <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">Geen upload</span>
+                  )}
                 </p>
               </div>
 

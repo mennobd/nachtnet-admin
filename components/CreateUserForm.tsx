@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
 
 type OrganizationOption = {
   id: string;
@@ -112,6 +113,7 @@ export default function CreateUserForm({
             className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black outline-none focus:border-slate-500"
             required
           />
+          <PasswordStrengthIndicator password={password} />
         </div>
 
         <div>

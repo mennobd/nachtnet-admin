@@ -2,6 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import SidebarSearch from "@/components/SidebarSearch";
+import SessionTimeout from "@/components/SessionTimeout";
 
 export default async function DashboardLayout({
   children,
@@ -95,6 +97,7 @@ export default async function DashboardLayout({
           </div>
 
           <nav className="px-4 py-6">
+            <SidebarSearch />
             <ul className="space-y-1">
               {navItems.map((item) => (
                 <li key={item.href}>
@@ -121,7 +124,10 @@ export default async function DashboardLayout({
           </div>
         </aside>
 
-        <main className="flex-1 p-6 md:p-8">{children}</main>
+        <main className="flex-1 p-6 md:p-8">
+          <SessionTimeout />
+          {children}
+        </main>
       </div>
     </div>
   );

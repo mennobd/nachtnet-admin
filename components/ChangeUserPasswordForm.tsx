@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
 
 export default function ChangeUserPasswordForm({
   userId,
@@ -60,6 +61,7 @@ export default function ChangeUserPasswordForm({
           className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-black placeholder:text-slate-400 outline-none focus:border-slate-500"
           required
         />
+        <PasswordStrengthIndicator password={password} />
       </div>
 
       {error ? (

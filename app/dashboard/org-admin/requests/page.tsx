@@ -2,6 +2,18 @@ import { requireAdminOrOrgAdmin } from "@/lib/auth";
 import CreateUserRequestForm from "@/components/CreateUserRequestForm";
 import { prisma } from "@/lib/db";
 
+const statusLabel: Record<string, string> = {
+  PENDING: "In behandeling",
+  APPROVED: "Goedgekeurd",
+  REJECTED: "Afgewezen",
+};
+
+const statusClasses: Record<string, string> = {
+  PENDING: "bg-amber-100 text-amber-700",
+  APPROVED: "bg-green-100 text-green-700",
+  REJECTED: "bg-red-100 text-red-700",
+};
+
 export default async function UserRequestsPage() {
   const currentUser = await requireAdminOrOrgAdmin();
 
@@ -9,18 +21,19 @@ export default async function UserRequestsPage() {
     return null;
   }
 
-  const organizations = await prisma.organization.findMany({
-    where: {
-      id: {
-        in: currentUser.organizationAccessIds,
-      },
-    },
-    orderBy: { name: "asc" },
-    select: {
-      id: true,
-      name: true,
-    },
-  });
+  const [organizations, myRequests] = await Promise.all([
+    prisma.organization.findMany({
+      where: { id: { in: currentUser.organizationAccessIds } },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+    prisma.userApprovalRequest.findMany({
+      where: { requestedById: currentUser.id },
+      orderBy: { createdAt: "desc" },
+      include: { organization: { select: { name: true } } },
+      take: 50,
+    }),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -35,6 +48,49 @@ export default async function UserRequestsPage() {
 
       <section className="rounded-2xl bg-white p-8 shadow-sm">
         <CreateUserRequestForm organizations={organizations} />
+      </section>
+
+      <section className="rounded-2xl bg-white p-8 shadow-sm">
+        <h3 className="text-lg font-semibold text-slate-900">Mijn aanvragen</h3>
+        <p className="mt-1 text-sm text-slate-500">
+          Status van jouw ingediende gebruikersaanvragen.
+        </p>
+
+        {myRequests.length === 0 ? (
+          <p className="mt-4 text-sm text-slate-600">
+            Je hebt nog geen aanvragen ingediend.
+          </p>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {myRequests.map((req) => (
+              <div
+                key={req.id}
+                className="flex items-start justify-between rounded-xl border border-slate-200 p-4"
+              >
+                <div className="space-y-1">
+                  <p className="font-medium text-slate-900">{req.name}</p>
+                  <p className="text-sm text-slate-500">{req.email}</p>
+                  <p className="text-xs text-slate-400">
+                    {req.organization.name} · {req.requestedRole} ·{" "}
+                    {new Date(req.createdAt).toLocaleDateString("nl-NL")}
+                  </p>
+                  {req.rejectionReason && (
+                    <p className="text-xs text-red-600">
+                      Reden afwijzing: {req.rejectionReason}
+                    </p>
+                  )}
+                </div>
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-medium shrink-0 ${
+                    statusClasses[req.status] ?? "bg-slate-100 text-slate-700"
+                  }`}
+                >
+                  {statusLabel[req.status] ?? req.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
