@@ -112,7 +112,7 @@ export default function Sidebar({
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
+      <nav className="px-3 py-4">
         <SearchForm />
         <ul className="space-y-0.5">
           {navItems.map((item) => {
