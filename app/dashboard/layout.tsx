@@ -13,15 +13,20 @@ export default async function DashboardLayout({
   const user = await requireUser();
 
   async function getNavItems() {
-    const pendingRequestCount =
+    const [pendingRequestCount, pendingChangeRequestCount] = await Promise.all([
       user.role === "ADMIN"
-        ? await prisma.userApprovalRequest.count({
+        ? prisma.userApprovalRequest.count({ where: { status: "PENDING" } })
+        : Promise.resolve(0),
+      user.role === "ORG_ADMIN"
+        ? prisma.accountChangeRequest.count({
             where: {
               status: "PENDING",
+              user: { organizationId: { in: user.organizationAccessIds } },
             },
           })
-        : 0;
-  
+        : Promise.resolve(0),
+    ]);
+
     const baseItems = [
       { href: "/dashboard", label: "Dashboard" },
       { href: "/dashboard/routes", label: "Routes" },
@@ -40,14 +45,17 @@ export default async function DashboardLayout({
         label: "Gebruikers",
       });
     }
-  
+
     if (user.role === "ORG_ADMIN") {
       baseItems.push({
         href: "/dashboard/org-admin/requests",
-        label: "Gebruiker aanvragen",
+        label:
+          pendingChangeRequestCount > 0
+            ? `Aanvragen (${pendingChangeRequestCount})`
+            : "Aanvragen",
       });
     }
-  
+
     if (user.role === "ADMIN") {
       baseItems.push(
         {
@@ -68,8 +76,8 @@ export default async function DashboardLayout({
       );
     }
 
-  return baseItems;
-}
+    return baseItems;
+  }
 
   const navItems = await getNavItems();
 
