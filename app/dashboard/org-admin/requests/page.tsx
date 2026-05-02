@@ -42,7 +42,10 @@ export default async function UserRequestsPage() {
     prisma.accountChangeRequest.findMany({
       where: {
         status: "PENDING",
-        user: { organizationId: { in: currentUser.organizationAccessIds } },
+        user: {
+          organizationId: { in: currentUser.organizationAccessIds },
+          role: { in: ["EDITOR", "VIEWER"] },
+        },
       },
       orderBy: { createdAt: "asc" },
       include: {

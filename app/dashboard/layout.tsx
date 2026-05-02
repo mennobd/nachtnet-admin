@@ -21,8 +21,15 @@ export default async function DashboardLayout({
         ? prisma.accountChangeRequest.count({
             where: {
               status: "PENDING",
-              user: { organizationId: { in: user.organizationAccessIds } },
+              user: {
+                organizationId: { in: user.organizationAccessIds },
+                role: { in: ["EDITOR", "VIEWER"] },
+              },
             },
+          })
+        : user.role === "ADMIN"
+        ? prisma.accountChangeRequest.count({
+            where: { status: "PENDING", user: { role: "ORG_ADMIN" } },
           })
         : Promise.resolve(0),
     ]);
@@ -60,10 +67,10 @@ export default async function DashboardLayout({
       baseItems.push(
         {
           href: "/dashboard/admin/user-requests",
-          label:
-            pendingRequestCount > 0
-              ? `Aanvragen (${pendingRequestCount})`
-              : "Aanvragen",
+          label: (() => {
+            const total = pendingRequestCount + pendingChangeRequestCount;
+            return total > 0 ? `Aanvragen (${total})` : "Aanvragen";
+          })(),
         },
         {
           href: "/dashboard/admin/organizations",

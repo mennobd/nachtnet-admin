@@ -4,6 +4,7 @@ import { getRoleMeta } from "@/lib/roles";
 import AccountProfileForm from "@/components/AccountProfileForm";
 import AccountPasswordForm from "@/components/AccountPasswordForm";
 import AccountChangeRequestForm from "@/components/AccountChangeRequestForm";
+import AccountDirectEmailForm from "@/components/AccountDirectEmailForm";
 
 const statusLabel: Record<string, string> = {
   PENDING: "In behandeling",
@@ -90,21 +91,36 @@ export default async function AccountPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl bg-white p-8 shadow-sm">
-        <h3 className="text-lg font-semibold text-slate-900">
-          Wijziging aanvragen
-        </h3>
-        <p className="mt-1 text-sm text-slate-500">
-          Vraag een wijziging van je e-mailadres of rol aan. Een beheerder
-          beoordeelt het verzoek.
-        </p>
-        <div className="mt-6 max-w-sm">
-          <AccountChangeRequestForm
-            currentEmail={user.email}
-            currentRole={user.role}
-          />
-        </div>
-      </section>
+      {user.role === "ADMIN" ? (
+        <section className="rounded-2xl bg-white p-8 shadow-sm">
+          <h3 className="text-lg font-semibold text-slate-900">
+            E-mailadres wijzigen
+          </h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Wijzig je e-mailadres direct — als ADMIN heb je geen goedkeuring nodig.
+          </p>
+          <div className="mt-6 max-w-sm">
+            <AccountDirectEmailForm currentEmail={user.email} />
+          </div>
+        </section>
+      ) : (
+        <section className="rounded-2xl bg-white p-8 shadow-sm">
+          <h3 className="text-lg font-semibold text-slate-900">
+            Wijziging aanvragen
+          </h3>
+          <p className="mt-1 text-sm text-slate-500">
+            {user.role === "ORG_ADMIN"
+              ? "Vraag een wijziging aan — een ADMIN beoordeelt jouw verzoek."
+              : "Vraag een wijziging aan — je afdelingsadmin beoordeelt jouw verzoek."}
+          </p>
+          <div className="mt-6 max-w-sm">
+            <AccountChangeRequestForm
+              currentEmail={user.email}
+              currentRole={user.role}
+            />
+          </div>
+        </section>
+      )}
 
       <section className="rounded-2xl bg-white p-8 shadow-sm">
         <h3 className="text-lg font-semibold text-slate-900">

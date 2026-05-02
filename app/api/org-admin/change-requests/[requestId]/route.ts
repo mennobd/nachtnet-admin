@@ -48,6 +48,17 @@ export async function PATCH(
       );
     }
 
+    // ORG_ADMIN requests must be reviewed by ADMIN only
+    if (
+      changeRequest.user.role === "ORG_ADMIN" &&
+      auth.role !== "ADMIN"
+    ) {
+      return NextResponse.json(
+        { error: "Verzoeken van afdelingsadmins kunnen alleen door een ADMIN worden beoordeeld." },
+        { status: 403 }
+      );
+    }
+
     if (auth.role === "ORG_ADMIN") {
       if (
         !changeRequest.user.organizationId ||
