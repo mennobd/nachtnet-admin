@@ -112,7 +112,13 @@ export default async function DashboardLayout({
             </ul>
           </nav>
 
-          <div className="px-4 pb-6">
+          <div className="px-4 pb-6 space-y-2">
+            <Link
+              href="/dashboard/account"
+              className="block rounded-xl px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-900"
+            >
+              {user.name}
+            </Link>
             <form action="/logout" method="POST">
               <button
                 type="submit"
