@@ -12,26 +12,35 @@ export default async function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm">
-        <div className="mb-8 flex flex-col items-center text-center">
-          <Image
-            src="/bannerlogo.png"
-            alt="RET"
-            width={260}
-            height={80}
-            priority
-            className="h-auto w-auto max-w-full"
-          />
+      <div className="w-full max-w-sm">
+        {/* Card */}
+        <div className="rounded-2xl bg-white shadow-sm border border-slate-200 overflow-hidden">
+          {/* Brand header */}
+          <div className="border-b border-slate-100 px-8 py-7 text-center">
+            <Image
+              src="/bannerlogo.png"
+              alt="RET"
+              width={180}
+              height={56}
+              priority
+              className="mx-auto h-auto w-auto max-w-full"
+            />
+            <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-slate-400">
+              Routebeheer
+            </p>
+          </div>
 
-          <h1 className="mt-6 text-2xl font-semibold text-slate-900">
-            RET Navigatie portaal
-          </h1>
-          <p className="mt-2 text-sm text-slate-500">
-            Log in om routes, publicaties en manifesten te beheren.
-          </p>
+          {/* Form area */}
+          <div className="px-8 py-7">
+            <h1 className="mb-1 text-lg font-semibold text-slate-900">
+              Inloggen
+            </h1>
+            <p className="mb-6 text-sm text-slate-500">
+              Voer uw gegevens in om verder te gaan.
+            </p>
+            <LoginForm />
+          </div>
         </div>
-
-        <LoginForm />
       </div>
     </div>
   );
