@@ -1,7 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const apiKey = process.env.MANIFEST_API_KEY;
+  if (apiKey) {
+    const auth = request.headers.get("authorization") ?? "";
+    const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+    if (token !== apiKey) {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    }
+  }
+
   const appBaseUrl = process.env.APP_BASE_URL;
 
   if (!appBaseUrl) {

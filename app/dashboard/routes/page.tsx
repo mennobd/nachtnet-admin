@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import BulkRouteActions from "@/components/BulkRouteActions";
 
 type RouteEntry = {
   isPublished: boolean;
@@ -430,6 +431,22 @@ export default async function RoutesPage({
             )}
           </div>
         )}
+      </section>
+
+      <section className="rounded-2xl bg-white p-8 shadow-sm">
+        <h3 className="mb-1 text-lg font-semibold text-slate-900">Bulkacties</h3>
+        <p className="mb-4 text-sm text-slate-500">
+          Selecteer routes om hun status of vestiging in één keer te wijzigen.
+        </p>
+        <BulkRouteActions
+          routes={enrichedRoutes.map((r) => ({
+            id: r.id,
+            title: r.title,
+            routeCode: r.routeCode,
+            depot: r.depot,
+            status: r.status,
+          }))}
+        />
       </section>
     </div>
   );

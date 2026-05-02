@@ -47,6 +47,12 @@ export default async function DashboardLayout({
       { href: "/dashboard/routes", label: "Routes" },
       { href: "/dashboard/releases", label: "Releases" },
       { href: "/dashboard/auditlog", label: "Auditlog" },
+      {
+        href: "/dashboard/notifications",
+        label: unreadNotificationCount > 0
+          ? `Meldingen (${unreadNotificationCount})`
+          : "Meldingen",
+      },
     ];
     if (user.role !== "VIEWER" || userOrgName === "AFD-NaCo") {
       baseItems.push({

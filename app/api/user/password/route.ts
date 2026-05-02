@@ -3,10 +3,21 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { apiUser } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
+import { checkRateLimit, consumeRateLimit } from "@/lib/rate-limit";
+
+const PASS_LIMIT = { max: 5, windowMs: 15 * 60_000 };
 
 export async function PATCH(request: Request) {
   const auth = await apiUser();
   if (auth instanceof NextResponse) return auth;
+
+  const limitCheck = checkRateLimit(`password:${auth.id}`, PASS_LIMIT);
+  if (!limitCheck.ok) {
+    return NextResponse.json(
+      { error: "Te veel pogingen. Probeer het later opnieuw." },
+      { status: 429, headers: { "Retry-After": String(limitCheck.retryAfter) } }
+    );
+  }
 
   try {
     const body = await request.json();
@@ -46,6 +57,7 @@ export async function PATCH(request: Request) {
 
     const valid = await bcrypt.compare(currentPassword, user.passwordHash);
     if (!valid) {
+      consumeRateLimit(`password:${auth.id}`, PASS_LIMIT);
       return NextResponse.json(
         { error: "Huidig wachtwoord klopt niet." },
         { status: 400 }

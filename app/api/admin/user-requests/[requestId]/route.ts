@@ -102,7 +102,7 @@ export async function PATCH(
       );
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 12);
 
     const result = await prisma.$transaction(async (tx) => {
       const createdUser = await tx.user.create({

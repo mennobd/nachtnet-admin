@@ -14,6 +14,15 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ fileName: string }> }
 ) {
+  const apiKey = process.env.MANIFEST_API_KEY;
+  if (apiKey) {
+    const auth = request.headers.get("authorization") ?? "";
+    const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+    if (token !== apiKey) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+  }
+
   try {
     const { fileName } = await params;
 

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import DeleteRouteButton from "@/components/DeleteRouteButton";
 import DuplicateRouteButton from "@/components/DuplicateRouteButton";
+import DeleteRouteFileButton from "@/components/DeleteRouteFileButton";
 
 function getEntryStatus(entry: {
   isPublished: boolean;
@@ -61,6 +62,13 @@ export default async function RouteDetailPage({
 
         <div className="mt-6 flex items-center gap-3">
           <Link
+            href={`/dashboard/routes/${route.id}/edit`}
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
+          >
+            Bewerken
+          </Link>
+
+          <Link
             href={`/dashboard/routes/${route.id}/publish`}
             className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
           >
@@ -94,9 +102,18 @@ export default async function RouteDetailPage({
                 key={file.id}
                 className="rounded-xl border p-4 text-sm text-slate-600"
               >
-                <p className="font-medium text-slate-900">{file.fileName}</p>
-                <p>Versie: {file.version}</p>
-                <p>Checksum: {file.checksum}</p>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="font-medium text-slate-900">{file.fileName}</p>
+                    <p>Versie: {file.version}</p>
+                    <p className="break-all text-xs text-slate-400">Checksum: {file.checksum}</p>
+                  </div>
+                  <DeleteRouteFileButton
+                    routeId={route.id}
+                    fileId={file.id}
+                    fileName={file.fileName}
+                  />
+                </div>
               </div>
             ))}
           </div>
