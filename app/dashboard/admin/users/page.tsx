@@ -6,8 +6,16 @@ import ChangeUserPasswordForm from "@/components/ChangeUserPasswordForm";
 import UserActivationButton from "@/components/UserActivationButton";
 import DeleteUserButton from "@/components/DeleteUserButton";
 
-export default async function UsersPage() {
+const PAGE_SIZE = 20;
+
+export default async function UsersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const currentUser = await requireAdminOrOrgAdmin();
+  const params = await searchParams;
+  const page = Math.max(1, parseInt(params.page ?? "1") || 1);
 
   const userWhere =
     currentUser.role === "ADMIN"
@@ -18,10 +26,12 @@ export default async function UsersPage() {
           },
         };
 
-  const [users, organizations] = await Promise.all([
+  const [users, totalUserCount, organizations] = await Promise.all([
     prisma.user.findMany({
       where: userWhere,
       orderBy: { createdAt: "desc" },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
       select: {
         id: true,
         name: true,
@@ -46,8 +56,10 @@ export default async function UsersPage() {
           },
         },
         createdAt: true,
+        lastLoginAt: true,
       },
     }),
+    prisma.user.count({ where: userWhere }),
     currentUser.role === "ADMIN"
       ? prisma.organization.findMany({
           orderBy: { name: "asc" },
@@ -87,7 +99,7 @@ export default async function UsersPage() {
             Bestaande gebruikers
           </h3>
           <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-            {users.length} gebruiker(s)
+            {totalUserCount} gebruiker(s)
           </span>
         </div>
 
@@ -117,8 +129,14 @@ export default async function UsersPage() {
                             .join(", ")}
                     </p>
                     <p className="mt-1 text-xs text-slate-400">
-                      Aangemaakt op{" "}
+                      Aangemaakt:{" "}
                       {new Date(user.createdAt).toLocaleString("nl-NL")}
+                    </p>
+                    <p className="mt-0.5 text-xs text-slate-400">
+                      Laatste login:{" "}
+                      {user.lastLoginAt
+                        ? new Date(user.lastLoginAt).toLocaleString("nl-NL")
+                        : "Nooit"}
                     </p>
                   </div>
 
@@ -190,6 +208,36 @@ export default async function UsersPage() {
             ))}
           </div>
         )}
+
+        {totalUserCount > PAGE_SIZE && (() => {
+          const totalPages = Math.ceil(totalUserCount / PAGE_SIZE);
+          const safePage = Math.min(page, totalPages);
+          return (
+            <div className="mt-6 flex items-center justify-between border-t border-slate-200 pt-4 text-sm">
+              <span className="text-slate-500">
+                {totalUserCount} gebruikers · pagina {safePage} van {totalPages}
+              </span>
+              <div className="flex gap-2">
+                {safePage > 1 ? (
+                  <a
+                    href={`/dashboard/admin/users?page=${safePage - 1}`}
+                    className="rounded-xl border border-slate-300 px-4 py-2 text-slate-700 hover:bg-slate-100"
+                  >
+                    Vorige
+                  </a>
+                ) : null}
+                {safePage < totalPages ? (
+                  <a
+                    href={`/dashboard/admin/users?page=${safePage + 1}`}
+                    className="rounded-xl border border-slate-300 px-4 py-2 text-slate-700 hover:bg-slate-100"
+                  >
+                    Volgende
+                  </a>
+                ) : null}
+              </div>
+            </div>
+          );
+        })()}
       </section>
 
       {currentUser.role === "ADMIN" ? (

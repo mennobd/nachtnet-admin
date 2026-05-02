@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import DeleteRouteButton from "@/components/DeleteRouteButton";
+import DuplicateRouteButton from "@/components/DuplicateRouteButton";
 
 function getEntryStatus(entry: {
   isPublished: boolean;
@@ -72,6 +73,8 @@ export default async function RouteDetailPage({
           >
             Upload GPX
           </Link>
+
+          <DuplicateRouteButton routeId={route.id} routeTitle={route.title} />
 
           <DeleteRouteButton routeId={route.id} routeTitle={route.title} />
         </div>

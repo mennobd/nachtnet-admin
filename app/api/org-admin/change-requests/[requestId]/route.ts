@@ -136,6 +136,18 @@ export async function PATCH(
       });
     }
 
+    const typeNl = changeRequest.type === "EMAIL" ? "e-mailadres" : "rol";
+    await prisma.notification.create({
+      data: {
+        userId: changeRequest.userId,
+        message:
+          action === "APPROVE"
+            ? `Je verzoek om je ${typeNl} te wijzigen naar "${changeRequest.requestedValue}" is goedgekeurd.`
+            : `Je verzoek om je ${typeNl} te wijzigen is afgewezen.${rejectionReason ? ` Reden: ${rejectionReason}` : ""}`,
+        link: "/dashboard/account",
+      },
+    });
+
     await writeAuditLog({
       action:
         action === "APPROVE"

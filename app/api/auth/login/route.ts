@@ -102,6 +102,11 @@ export async function POST(request: Request) {
       );
     }
 
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+
     const token = await signSessionToken(user.id);
 
     const response = NextResponse.json({

@@ -5,6 +5,7 @@ import AccountProfileForm from "@/components/AccountProfileForm";
 import AccountPasswordForm from "@/components/AccountPasswordForm";
 import AccountChangeRequestForm from "@/components/AccountChangeRequestForm";
 import AccountDirectEmailForm from "@/components/AccountDirectEmailForm";
+import NotificationsPanel from "@/components/NotificationsPanel";
 
 const statusLabel: Record<string, string> = {
   PENDING: "In behandeling",
@@ -27,11 +28,27 @@ export default async function AccountPage() {
   const user = await requireUser();
   const roleMeta = getRoleMeta(user.role);
 
-  const changeRequests = await prisma.accountChangeRequest.findMany({
-    where: { userId: user.id },
-    orderBy: { createdAt: "desc" },
-    take: 20,
-  });
+  const [userDetail, changeRequests, notifications, recentActivity] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: user.id },
+      select: { lastLoginAt: true },
+    }),
+    prisma.accountChangeRequest.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+    }),
+    prisma.notification.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+    }),
+    prisma.auditLog.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+    }),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -65,6 +82,14 @@ export default async function AccountPage() {
             <dt className="w-28 shrink-0 text-slate-500">Status</dt>
             <dd className="text-slate-900">
               {user.isActive ? "Actief" : "Inactief"}
+            </dd>
+          </div>
+          <div className="flex gap-3">
+            <dt className="w-28 shrink-0 text-slate-500">Laatste login</dt>
+            <dd className="text-slate-900">
+              {userDetail?.lastLoginAt
+                ? new Date(userDetail.lastLoginAt).toLocaleString("nl-NL")
+                : "Onbekend"}
             </dd>
           </div>
         </dl>
@@ -169,6 +194,46 @@ export default async function AccountPage() {
                   }`}
                 >
                   {statusLabel[req.status] ?? req.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-2xl bg-white p-8 shadow-sm">
+        <h3 className="text-lg font-semibold text-slate-900">Meldingen</h3>
+        <p className="mt-1 text-sm text-slate-500">
+          Notificaties over goedgekeurde of afgewezen verzoeken.
+        </p>
+        <NotificationsPanel notifications={notifications} />
+      </section>
+
+      <section className="rounded-2xl bg-white p-8 shadow-sm">
+        <h3 className="text-lg font-semibold text-slate-900">
+          Recente activiteit
+        </h3>
+        <p className="mt-1 text-sm text-slate-500">
+          Jouw laatste 10 acties in het systeem.
+        </p>
+
+        {recentActivity.length === 0 ? (
+          <p className="mt-4 text-sm text-slate-600">Nog geen activiteit.</p>
+        ) : (
+          <div className="mt-4 space-y-2">
+            {recentActivity.map((log) => (
+              <div
+                key={log.id}
+                className="flex items-start justify-between gap-4 rounded-xl border border-slate-200 px-4 py-3 text-sm"
+              >
+                <div>
+                  <p className="font-medium text-slate-900">{log.action}</p>
+                  <p className="text-xs text-slate-500">
+                    {log.entity} · {log.entityId}
+                  </p>
+                </div>
+                <span className="shrink-0 text-xs text-slate-400">
+                  {new Date(log.createdAt).toLocaleString("nl-NL")}
                 </span>
               </div>
             ))}

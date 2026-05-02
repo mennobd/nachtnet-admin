@@ -74,6 +74,8 @@ function getCategoryBadge(category: string) {
   }
 }
 
+const PAGE_SIZE = 25;
+
 export default async function RoutesPage({
   searchParams,
 }: {
@@ -82,6 +84,7 @@ export default async function RoutesPage({
     publication?: string;
     upload?: string;
     depot?: string;
+    page?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -89,6 +92,7 @@ export default async function RoutesPage({
   const publicationFilter = params.publication ?? "alles";
   const uploadFilter = params.upload ?? "alles";
   const depotFilter = params.depot ?? "alles";
+  const page = Math.max(1, parseInt(params.page ?? "1") || 1);
 
   const routes = await prisma.route.findMany({
     orderBy: { createdAt: "desc" },
@@ -151,6 +155,20 @@ export default async function RoutesPage({
   });
 
   const totalRoutes = enrichedRoutes.length;
+  const totalPages = Math.max(1, Math.ceil(filteredRoutes.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pagedRoutes = filteredRoutes.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  function pageUrl(p: number) {
+    const sp = new URLSearchParams();
+    if (q) sp.set("q", q);
+    if (publicationFilter !== "alles") sp.set("publication", publicationFilter);
+    if (uploadFilter !== "alles") sp.set("upload", uploadFilter);
+    if (depotFilter !== "alles") sp.set("depot", depotFilter);
+    if (p > 1) sp.set("page", String(p));
+    const qs = sp.toString();
+    return `/dashboard/routes${qs ? `?${qs}` : ""}`;
+  }
   const routesWithoutUpload = enrichedRoutes.filter(
     (route) => !route.latestFile
   ).length;
@@ -300,7 +318,7 @@ export default async function RoutesPage({
           </p>
         ) : (
           <div className="space-y-4">
-            {filteredRoutes.map((route) => (
+            {pagedRoutes.map((route) => (
               <div
                 key={route.id}
                 className="flex items-center justify-between rounded-xl border p-4"
@@ -385,6 +403,31 @@ export default async function RoutesPage({
                 </div>
               </div>
             ))}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-slate-200 pt-4 text-sm">
+                <span className="text-slate-500">
+                  {filteredRoutes.length} resultaten · pagina {safePage} van {totalPages}
+                </span>
+                <div className="flex gap-2">
+                  {safePage > 1 ? (
+                    <a
+                      href={pageUrl(safePage - 1)}
+                      className="rounded-xl border border-slate-300 px-4 py-2 text-slate-700 hover:bg-slate-100"
+                    >
+                      Vorige
+                    </a>
+                  ) : null}
+                  {safePage < totalPages ? (
+                    <a
+                      href={pageUrl(safePage + 1)}
+                      className="rounded-xl border border-slate-300 px-4 py-2 text-slate-700 hover:bg-slate-100"
+                    >
+                      Volgende
+                    </a>
+                  ) : null}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </section>

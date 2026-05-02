@@ -13,7 +13,7 @@ export default async function DashboardLayout({
   const user = await requireUser();
 
   async function getNavItems() {
-    const [pendingRequestCount, pendingChangeRequestCount] = await Promise.all([
+    const [pendingRequestCount, pendingChangeRequestCount, unreadNotificationCount] = await Promise.all([
       user.role === "ADMIN"
         ? prisma.userApprovalRequest.count({ where: { status: "PENDING" } })
         : Promise.resolve(0),
@@ -32,6 +32,7 @@ export default async function DashboardLayout({
             where: { status: "PENDING", user: { role: "ORG_ADMIN" } },
           })
         : Promise.resolve(0),
+      prisma.notification.count({ where: { userId: user.id, read: false } }),
     ]);
 
     const baseItems = [
@@ -130,9 +131,14 @@ export default async function DashboardLayout({
           <div className="px-4 pb-6 space-y-2">
             <Link
               href="/dashboard/account"
-              className="block rounded-xl px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-900"
+              className="flex items-center justify-between rounded-xl px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-900"
             >
-              {user.name}
+              <span>{user.name}</span>
+              {unreadNotificationCount > 0 && (
+                <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-semibold text-white">
+                  {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
+                </span>
+              )}
             </Link>
             <form action="/logout" method="POST">
               <button
