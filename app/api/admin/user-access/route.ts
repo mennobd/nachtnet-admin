@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { apiAdmin } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 
 export async function POST(request: Request) {
-  const admin = await requireAdmin();
+  const auth = await apiAdmin();
+  if (auth instanceof NextResponse) return auth;
+  const admin = auth;
 
   try {
     const body = await request.json();
@@ -115,7 +117,9 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const admin = await requireAdmin();
+  const auth = await apiAdmin();
+  if (auth instanceof NextResponse) return auth;
+  const admin = auth;
 
   try {
     const body = await request.json();
@@ -164,7 +168,7 @@ export async function DELETE(request: Request) {
         organizationId: true,
       },
     });
-    
+
     if (targetUser?.organizationId === organizationId) {
       return NextResponse.json(
         { error: "De primaire afdeling van een ORG_ADMIN kan hier niet worden ontkoppeld." },

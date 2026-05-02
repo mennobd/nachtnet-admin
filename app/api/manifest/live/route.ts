@@ -2,6 +2,18 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
 export async function GET() {
+  const appBaseUrl = process.env.APP_BASE_URL;
+
+  if (!appBaseUrl) {
+    console.error("MANIFEST LIVE: APP_BASE_URL is niet geconfigureerd.");
+    return NextResponse.json(
+      { error: "Server is niet correct geconfigureerd (APP_BASE_URL)." },
+      { status: 500 }
+    );
+  }
+
+  const baseUrl = appBaseUrl.replace(/\/+$/, "");
+
   try {
     const now = new Date();
 
@@ -39,7 +51,7 @@ export async function GET() {
     const routes = Array.from(uniqueRoutes.values()).map((entry) => {
       const category = entry.file?.category ?? entry.type ?? "REGULIER";
 
-      const fileUrl = `${process.env.APP_BASE_URL}/routes/acties/${encodeURIComponent(
+      const fileUrl = `${baseUrl}/routes/acties/${encodeURIComponent(
         entry.file!.fileName
       )}`;
 

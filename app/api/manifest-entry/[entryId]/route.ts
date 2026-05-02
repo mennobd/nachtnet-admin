@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { writeAuditLog } from "@/lib/audit";
-import { getCurrentUser, getRequiredMutationUser } from "@/lib/auth";
+import { writeAuditLogTx } from "@/lib/audit";
+import { apiMutationUser } from "@/lib/auth";
 import { validateManifestEntryForPublish } from "@/lib/release-validation";
 
 function getPriorityForCategory(category: string | null | undefined) {
@@ -19,14 +19,9 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ entryId: string }> }
 ) {
-  const mutationUser = await getRequiredMutationUser();
-
-  if (!mutationUser) {
-    return NextResponse.json(
-      { error: "Geen rechten voor deze actie." },
-      { status: 403 }
-    );
-  }
+  const auth = await apiMutationUser();
+  if (auth instanceof NextResponse) return auth;
+  const mutationUser = auth;
 
   try {
     const { entryId } = await params;
@@ -86,15 +81,6 @@ export async function PATCH(
       );
     }
 
-    const currentUser = await getCurrentUser();
-
-    if (!currentUser) {
-      return NextResponse.json(
-        { error: "Niet ingelogd." },
-        { status: 401 }
-      );
-    }
-
     if (isPublished) {
       const validation = await validateManifestEntryForPublish(entryId);
 
@@ -112,40 +98,44 @@ export async function PATCH(
     const category = existingEntry.file?.category ?? "REGULIER";
     const priority = getPriorityForCategory(category);
 
-    const updated = await prisma.manifestEntry.update({
-      where: { id: entryId },
-      data: {
-        isPublished,
-        activeFrom,
-        activeUntil,
-        priority,
-        type: category,
-        notes,
-      },
-      include: {
-        route: true,
-        file: true,
-      },
-    });
+    const updated = await prisma.$transaction(async (tx) => {
+      const entry = await tx.manifestEntry.update({
+        where: { id: entryId },
+        data: {
+          isPublished,
+          activeFrom,
+          activeUntil,
+          priority,
+          type: category,
+          notes,
+        },
+        include: {
+          route: true,
+          file: true,
+        },
+      });
 
-    await writeAuditLog({
-      action: "PUBLICATION_UPDATED",
-      entity: "manifestEntry",
-      entityId: updated.id,
-      metadata: {
-        routeId: updated.routeId,
-        routeCode: updated.route?.routeCode ?? null,
-        fileName: updated.file?.fileName ?? null,
-        fileCategory: updated.file?.category ?? null,
-        version: updated.version,
-        isPublished: updated.isPublished,
-        activeFrom: updated.activeFrom,
-        activeUntil: updated.activeUntil,
-        priority: updated.priority,
-        type: updated.type,
-        notes: updated.notes,
-        performedBy: currentUser.email,
-      },
+      await writeAuditLogTx(tx, mutationUser.id, {
+        action: "PUBLICATION_UPDATED",
+        entity: "manifestEntry",
+        entityId: entry.id,
+        metadata: {
+          routeId: entry.routeId,
+          routeCode: entry.route?.routeCode ?? null,
+          fileName: entry.file?.fileName ?? null,
+          fileCategory: entry.file?.category ?? null,
+          version: entry.version,
+          isPublished: entry.isPublished,
+          activeFrom: entry.activeFrom,
+          activeUntil: entry.activeUntil,
+          priority: entry.priority,
+          type: entry.type,
+          notes: entry.notes,
+          performedBy: mutationUser.email,
+        },
+      });
+
+      return entry;
     });
 
     return NextResponse.json(updated);

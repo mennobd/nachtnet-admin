@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { apiAdmin } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 
 export async function GET() {
-  await requireAdmin();
+  const auth = await apiAdmin();
+  if (auth instanceof NextResponse) return auth;
 
   const organizations = await prisma.organization.findMany({
     orderBy: { name: "asc" },
@@ -24,7 +25,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const admin = await requireAdmin();
+  const auth = await apiAdmin();
+  if (auth instanceof NextResponse) return auth;
+  const admin = auth;
 
   try {
     const body = await request.json();

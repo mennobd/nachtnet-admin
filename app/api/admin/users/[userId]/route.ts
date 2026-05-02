@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAdmin, requireAdminOrOrgAdmin } from "@/lib/auth";
+import { apiAdmin, apiAdminOrOrgAdmin } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ userId: string }> }
 ) {
-  const currentUser = await requireAdminOrOrgAdmin();
+  const auth = await apiAdminOrOrgAdmin();
+  if (auth instanceof NextResponse) return auth;
+  const currentUser = auth;
 
   try {
     const { userId } = await params;
@@ -175,7 +177,9 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ userId: string }> }
 ) {
-  const currentUser = await requireAdmin();
+  const auth = await apiAdmin();
+  if (auth instanceof NextResponse) return auth;
+  const currentUser = auth;
 
   try {
     const { userId } = await params;
@@ -200,6 +204,13 @@ export async function DELETE(
             name: true,
           },
         },
+        _count: {
+          select: {
+            userApprovalRequestsCreated: {
+              where: { status: "PENDING" },
+            },
+          },
+        },
       },
     });
 
@@ -210,13 +221,32 @@ export async function DELETE(
       );
     }
 
-    await prisma.auditLog.updateMany({
-      where: { userId },
-      data: { userId: null },
-    });
+    if (targetUser._count.userApprovalRequestsCreated > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "Gebruiker kan niet worden verwijderd omdat er nog openstaande aanvragen zijn die door deze gebruiker zijn ingediend.",
+        },
+        { status: 400 }
+      );
+    }
 
-    await prisma.user.delete({
-      where: { id: userId },
+    await prisma.$transaction(async (tx) => {
+      await tx.auditLog.updateMany({
+        where: { userId },
+        data: { userId: null },
+      });
+
+      await tx.userApprovalRequest.deleteMany({
+        where: {
+          requestedById: userId,
+          status: { in: ["APPROVED", "REJECTED"] },
+        },
+      });
+
+      await tx.user.delete({
+        where: { id: userId },
+      });
     });
 
     await writeAuditLog({

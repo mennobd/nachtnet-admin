@@ -1,21 +1,28 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getRequiredMutationUser } from "@/lib/auth";
+import { apiMutationUser } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
+import { validateManifestEntryForPublish } from "@/lib/release-validation";
+
+function getPriorityForCategory(category: string | null | undefined) {
+  switch (category) {
+    case "CALAMITEIT":
+      return 10;
+    case "OMLEIDING":
+      return 50;
+    default:
+      return 100;
+  }
+}
 
 export async function POST(request: Request) {
-  const user = await getRequiredMutationUser();
-
-  if (!user) {
-    return NextResponse.json(
-      { error: "Geen rechten voor deze actie." },
-      { status: 403 }
-    );
-  }
+  const auth = await apiMutationUser();
+  if (auth instanceof NextResponse) return auth;
+  const user = auth;
 
   try {
     const body = await request.json();
-    const entryIds = Array.isArray(body.entryIds) ? body.entryIds : [];
+    const entryIds: unknown[] = Array.isArray(body.entryIds) ? body.entryIds : [];
 
     if (entryIds.length === 0) {
       return NextResponse.json(
@@ -26,9 +33,7 @@ export async function POST(request: Request) {
 
     const entries = await prisma.manifestEntry.findMany({
       where: {
-        id: {
-          in: entryIds,
-        },
+        id: { in: entryIds.map(String) },
       },
       include: {
         route: true,
@@ -43,65 +48,83 @@ export async function POST(request: Request) {
       );
     }
 
-    const invalidEntries = entries.filter((entry) => {
-      if (entry.isPublished) return true;
-      if (!entry.file) return true;
-      if (!entry.route) return true;
-
-      return !(
-        entry.route.routeCode &&
-        entry.route.title &&
-        entry.route.lineNumber &&
-        entry.route.direction &&
-        entry.route.depot
-      );
-    });
-
-    if (invalidEntries.length > 0) {
+    // Reject already-published entries
+    const alreadyPublished = entries.filter((e) => e.isPublished);
+    if (alreadyPublished.length > 0) {
       return NextResponse.json(
         {
-          error:
-            "Eén of meer geselecteerde releases zijn ongeldig of niet volledig ingevuld.",
-          invalidEntryIds: invalidEntries.map((e) => e.id),
+          error: "Eén of meer geselecteerde releases zijn al gepubliceerd.",
+          conflictingEntryIds: alreadyPublished.map((e) => e.id),
         },
         { status: 400 }
       );
     }
 
-    const groupedByRoute = new Map<string, typeof entries>();
-
+    // Reject when multiple entries target the same route
+    const routeIdCounts = new Map<string, string[]>();
     for (const entry of entries) {
-      const routeEntries = groupedByRoute.get(entry.routeId) ?? [];
-      routeEntries.push(entry);
-      groupedByRoute.set(entry.routeId, routeEntries);
+      const ids = routeIdCounts.get(entry.routeId) ?? [];
+      ids.push(entry.id);
+      routeIdCounts.set(entry.routeId, ids);
+    }
+    const conflictingRouteIds = Array.from(routeIdCounts.entries())
+      .filter(([, ids]) => ids.length > 1)
+      .map(([routeId]) => routeId);
+
+    if (conflictingRouteIds.length > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "De selectie bevat meerdere releases voor dezelfde route. Selecteer per route maximaal één release.",
+          conflictingRouteIds,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate each entry
+    const validationFailures: Array<{ entryId: string; errors: string[] }> = [];
+    for (const entry of entries) {
+      const result = await validateManifestEntryForPublish(entry.id);
+      if (!result.valid) {
+        validationFailures.push({ entryId: entry.id, errors: result.errors });
+      }
+    }
+
+    if (validationFailures.length > 0) {
+      return NextResponse.json(
+        {
+          error: "Eén of meer releases zijn niet klaar voor publicatie.",
+          validationFailures,
+        },
+        { status: 400 }
+      );
     }
 
     const publishedIds: string[] = [];
 
-    for (const [routeId, routeEntries] of groupedByRoute.entries()) {
-      await prisma.manifestEntry.updateMany({
-        where: {
-          routeId,
-        },
-        data: {
-          isPublished: false,
-        },
-      });
+    await prisma.$transaction(async (tx) => {
+      for (const entry of entries) {
+        await tx.manifestEntry.updateMany({
+          where: { routeId: entry.routeId, isPublished: true },
+          data: { isPublished: false },
+        });
 
-      for (const entry of routeEntries) {
-        await prisma.manifestEntry.update({
+        const category = entry.file?.category ?? "REGULIER";
+
+        await tx.manifestEntry.update({
           where: { id: entry.id },
           data: {
             isPublished: true,
             activeFrom: entry.activeFrom ?? new Date(),
             activeUntil: entry.activeUntil ?? null,
-            priority: entry.priority ?? 1,
+            priority: getPriorityForCategory(category),
           },
         });
 
         publishedIds.push(entry.id);
       }
-    }
+    });
 
     await writeAuditLog({
       action: "RELEASES_BULK_PUBLISHED",

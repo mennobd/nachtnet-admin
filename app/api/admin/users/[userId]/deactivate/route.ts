@@ -1,20 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireUser } from "@/lib/auth";
+import { apiAdminOrOrgAdmin } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ userId: string }> }
 ) {
-  const currentUser = await requireUser();
-
-  if (currentUser.role !== "ADMIN" && currentUser.role !== "ORG_ADMIN") {
-    return NextResponse.json(
-      { error: "Geen rechten om gebruikers te deactiveren." },
-      { status: 403 }
-    );
-  }
+  const auth = await apiAdminOrOrgAdmin();
+  if (auth instanceof NextResponse) return auth;
+  const currentUser = auth;
 
   try {
     const { userId } = await params;
@@ -56,7 +51,7 @@ export async function POST(
         { status: 403 }
       );
     }
-  
+
     if (targetUser.role === "ADMIN") {
       return NextResponse.json(
         { error: "Een afdelingsadmin mag geen systeembeheerder wijzigen." },
