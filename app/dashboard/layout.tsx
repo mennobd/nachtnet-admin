@@ -12,28 +12,29 @@ export default async function DashboardLayout({
 }) {
   const user = await requireUser();
 
-  async function getNavItems() {
-    const [pendingRequestCount, pendingChangeRequestCount, unreadNotificationCount] = await Promise.all([
-      user.role === "ADMIN"
-        ? prisma.userApprovalRequest.count({ where: { status: "PENDING" } })
-        : Promise.resolve(0),
-      user.role === "ORG_ADMIN"
-        ? prisma.accountChangeRequest.count({
-            where: {
-              status: "PENDING",
-              user: {
-                organizationId: { in: user.organizationAccessIds },
-                role: { in: ["EDITOR", "VIEWER"] },
-              },
+  const [pendingRequestCount, pendingChangeRequestCount, unreadNotificationCount] = await Promise.all([
+    user.role === "ADMIN"
+      ? prisma.userApprovalRequest.count({ where: { status: "PENDING" } })
+      : Promise.resolve(0),
+    user.role === "ORG_ADMIN"
+      ? prisma.accountChangeRequest.count({
+          where: {
+            status: "PENDING",
+            user: {
+              organizationId: { in: user.organizationAccessIds },
+              role: { in: ["EDITOR", "VIEWER"] },
             },
-          })
-        : user.role === "ADMIN"
-        ? prisma.accountChangeRequest.count({
-            where: { status: "PENDING", user: { role: "ORG_ADMIN" } },
-          })
-        : Promise.resolve(0),
-      prisma.notification.count({ where: { userId: user.id, read: false } }),
-    ]);
+          },
+        })
+      : user.role === "ADMIN"
+      ? prisma.accountChangeRequest.count({
+          where: { status: "PENDING", user: { role: "ORG_ADMIN" } },
+        })
+      : Promise.resolve(0),
+    prisma.notification.count({ where: { userId: user.id, read: false } }),
+  ]);
+
+  function getNavItems() {
 
     const baseItems = [
       { href: "/dashboard", label: "Dashboard" },
@@ -87,7 +88,7 @@ export default async function DashboardLayout({
     return baseItems;
   }
 
-  const navItems = await getNavItems();
+  const navItems = getNavItems();
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
