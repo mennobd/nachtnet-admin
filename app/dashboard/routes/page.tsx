@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import BulkRouteActions from "@/components/BulkRouteActions";
+import RouteImportForm from "@/components/RouteImportForm";
 
 type RouteEntry = {
   isPublished: boolean;
@@ -447,6 +448,14 @@ export default async function RoutesPage({
             status: r.status,
           }))}
         />
+      </section>
+
+      <section className="rounded-2xl bg-white p-8 shadow-sm">
+        <h3 className="mb-1 text-lg font-semibold text-slate-900">Routes importeren via CSV</h3>
+        <p className="mb-4 text-sm text-slate-500">
+          Upload een CSV-bestand om meerdere routes tegelijk aan te maken. Download het voorbeeldbestand voor het juiste formaat.
+        </p>
+        <RouteImportForm />
       </section>
     </div>
   );

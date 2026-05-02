@@ -1,0 +1,4 @@
+routeCode,title,lineNumber,direction,depot,category,notes
+RET-NN-L12-ZUID,Lijn 12 – Zuid → Centraal,12,Zuid → Centraal,Zuid,REGULIER,
+RET-NN-L14-KLEIWEG,Lijn 14 – Kleiweg → Centraal,14,Kleiweg → Centraal,Kleiweg,REGULIER,Tijdelijke nachtroute
+RET-NN-L20-NACHTNET,Lijn 20 – Nachtnet Omleiding,20,Centrum → Noord,NACHTNET,OMLEIDING,Omleiding i.v.m. werkzaamheden

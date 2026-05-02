@@ -54,8 +54,10 @@ export default async function DashboardPage() {
   const expiringSoon = enriched.filter((r) => {
     if (!r.latest?.activeUntil || !r.latest.isPublished) return false;
     const diff = new Date(r.latest.activeUntil).getTime() - now.getTime();
-    return diff > 0 && diff < 72 * 60 * 60 * 1000;
-  });
+    return diff > 0 && diff < 7 * 24 * 60 * 60 * 1000;
+  }).sort((a, b) =>
+    new Date(a.latest!.activeUntil!).getTime() - new Date(b.latest!.activeUntil!).getTime()
+  );
 
   const upcoming = enriched.filter((r) => {
     if (!r.latest?.activeFrom) return false;
@@ -77,10 +79,8 @@ export default async function DashboardPage() {
           )}
           {expiringSoon.length > 0 && (
             <div className="rounded-2xl border border-orange-200 bg-orange-50 px-6 py-4 text-sm text-orange-800">
-              <span className="font-semibold">Let op:</span> {expiringSoon.length} route{expiringSoon.length !== 1 ? "s verlopen" : " verloopt"} binnen 72 uur.{" "}
-              <Link href="/dashboard/routes?publication=live" className="underline font-medium">
-                Bekijk live routes →
-              </Link>
+              <span className="font-semibold">Let op:</span> {expiringSoon.length} route{expiringSoon.length !== 1 ? "s verlopen" : " verloopt"} binnen 7 dagen.{" "}
+              <a href="#verlopend" className="underline font-medium">Bekijk hieronder →</a>
             </div>
           )}
         </div>
@@ -196,6 +196,40 @@ export default async function DashboardPage() {
           )}
         </div>
       </section>
+
+      {/* VERLOPENDE PUBLICATIES */}
+      {expiringSoon.length > 0 && (
+        <section id="verlopend" className="rounded-2xl bg-white p-8 shadow-sm">
+          <h2 className="text-lg font-semibold text-slate-900">Verloopt binnen 7 dagen</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Deze live routes hebben een einddatum die binnenkort bereikt wordt.
+          </p>
+          <div className="mt-4 space-y-3">
+            {expiringSoon.map((r) => {
+              const expiresAt = new Date(r.latest!.activeUntil!);
+              const hoursLeft = Math.round((expiresAt.getTime() - now.getTime()) / (60 * 60 * 1000));
+              const urgent = hoursLeft < 24;
+              return (
+                <div key={r.id} className={`flex items-center justify-between rounded-xl border p-4 ${urgent ? "border-red-200 bg-red-50" : "border-orange-200 bg-orange-50"}`}>
+                  <div>
+                    <p className={`font-medium ${urgent ? "text-red-900" : "text-orange-900"}`}>{r.title}</p>
+                    <p className={`text-xs ${urgent ? "text-red-700" : "text-orange-700"}`}>
+                      {r.routeCode} · {r.depot} · verloopt {expiresAt.toLocaleString("nl-NL")}
+                      {" "}({hoursLeft < 1 ? "< 1 uur" : hoursLeft < 24 ? `${hoursLeft} uur` : `${Math.round(hoursLeft / 24)} dagen`})
+                    </p>
+                  </div>
+                  <Link
+                    href={`/dashboard/routes/${r.id}/publish`}
+                    className={`rounded-lg px-3 py-2 text-sm font-medium text-white ${urgent ? "bg-red-600 hover:bg-red-700" : "bg-orange-500 hover:bg-orange-600"}`}
+                  >
+                    Verlengen
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* ACTIES */}
       <section className="rounded-2xl bg-white p-8 shadow-sm">
