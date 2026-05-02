@@ -73,8 +73,8 @@ export default function UploadRouteFileForm({
 
       setStatus(
         publishNow
-          ? `Upload gelukt en live gezet. Bestand: ${data.fileName}, versie: ${data.version}`
-          : `Upload gelukt. Bestand: ${data.fileName}, versie: ${data.version}`
+          ? `Upload gelukt en live gezet. Bestand: ${data?.fileName}, versie: ${data?.version}`
+          : `Upload gelukt. Bestand: ${data?.fileName}, versie: ${data?.version}`
       );
 
       setFile(null);
